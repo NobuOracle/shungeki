@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: Offset(0, 4),
           ),
@@ -188,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: isSelected ? 8 : 4,
               offset: Offset(0, isSelected ? 4 : 2),
             ),
@@ -281,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         color: Color(0xFF8B6F47),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 2,
             offset: Offset(1, 1),
           ),
@@ -315,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(8),
           boxShadow: isEnabled ? [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: Offset(0, 4),
             ),
@@ -347,7 +347,7 @@ class _VintagePaperPainter extends CustomPainter {
     // 埃・砂埃のスポット
     final random = [0.1, 0.3, 0.5, 0.7, 0.9];
     for (var i = 0; i < 50; i++) {
-      paint.color = Color(0xFFB8967D).withOpacity(0.1);
+      paint.color = Color(0xFFB8967D).withValues(alpha: 0.1);
       canvas.drawCircle(
         Offset(
           size.width * random[i % 5],
@@ -370,12 +370,12 @@ class _PaperStainsPainter extends CustomPainter {
     final paint = Paint();
     
     // ランダムなシミ
-    paint.color = Color(0xFFC5AE8E).withOpacity(0.2);
+    paint.color = Color(0xFFC5AE8E).withValues(alpha: 0.2);
     canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.3), 15, paint);
     canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.7), 20, paint);
     
     // 引っかき傷風の線
-    paint.color = Color(0xFFB8967D).withOpacity(0.15);
+    paint.color = Color(0xFFB8967D).withValues(alpha: 0.15);
     paint.strokeWidth = 1;
     canvas.drawLine(
       Offset(size.width * 0.1, size.height * 0.5),

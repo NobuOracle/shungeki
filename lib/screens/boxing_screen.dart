@@ -5,6 +5,46 @@ import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
 import 'result_screen.dart';
 
+// パンチの種類を定義
+enum PunchType {
+  leftJab,
+  rightJab,
+  leftStraight,
+  rightStraight,
+  leftHook,
+  rightHook,
+  leftUppercut,
+  rightUppercut,
+  leftBodyShot,
+  rightBodyShot,
+}
+
+// パンチタイプの表示名を取得
+String getPunchLabel(PunchType type) {
+  switch (type) {
+    case PunchType.leftJab:
+      return 'Left Jab';
+    case PunchType.rightJab:
+      return 'Right Jab';
+    case PunchType.leftStraight:
+      return 'Left Straight';
+    case PunchType.rightStraight:
+      return 'Right Straight';
+    case PunchType.leftHook:
+      return 'Left Hook';
+    case PunchType.rightHook:
+      return 'Right Hook';
+    case PunchType.leftUppercut:
+      return 'Left Uppercut';
+    case PunchType.rightUppercut:
+      return 'Right Uppercut';
+    case PunchType.leftBodyShot:
+      return 'Left Body Shot';
+    case PunchType.rightBodyShot:
+      return 'Right Body Shot';
+  }
+}
+
 class BoxingScreen extends StatefulWidget {
   const BoxingScreen({super.key});
 
@@ -19,13 +59,17 @@ class _BoxingScreenState extends State<BoxingScreen> {
   DateTime? _signalTime;
   Timer? _signalTimer;
   final Random _random = Random();
-  String _correctButton = 'left'; // 'left' or 'right'
+  
+  // 3回連続早押し用の変数
+  int _currentRound = 0; // 0: 未開始, 1: 第1ラウンド, 2: 第2ラウンド, 3: 第3ラウンド
+  final List<int> _reactionTimes = []; // 各ラウンドの反応時間を記録
+  PunchType? _correctPunch; // 現在の正解パンチ
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startWaiting();
+      _startNewRound();
     });
   }
 
@@ -35,16 +79,22 @@ class _BoxingScreenState extends State<BoxingScreen> {
     super.dispose();
   }
 
-  void _startWaiting() {
-    // ランダムに正解ボタンを決定
+  // 新しいラウンドを開始
+  void _startNewRound() {
+    _currentRound++;
+    
+    // ランダムに正解パンチを決定
+    final allPunches = PunchType.values;
+    _correctPunch = allPunches[_random.nextInt(allPunches.length)];
+    
     setState(() {
-      _correctButton = _random.nextBool() ? 'left' : 'right';
       _isWaiting = true;
       _hasSignal = false;
       _isFalseStart = false;
       _signalTime = null;
     });
 
+    // 2〜5秒後にシグナルを出す
     final delayMs = 2000 + _random.nextInt(3000);
     _signalTimer = Timer(Duration(milliseconds: delayMs), () {
       if (mounted && _isWaiting) {
@@ -56,11 +106,12 @@ class _BoxingScreenState extends State<BoxingScreen> {
     });
   }
 
-  void _onButtonPress(String button) {
+  // ボタンが押された時の処理
+  void _onPunchButtonPress(PunchType punch) {
     if (_isFalseStart) return;
     if (!_isWaiting) return;
 
-    // 合図前
+    // 合図前にボタンを押した場合（フライング）
     if (!_hasSignal) {
       setState(() {
         _isFalseStart = true;
@@ -74,20 +125,48 @@ class _BoxingScreenState extends State<BoxingScreen> {
       return;
     }
 
-    // 合図後
-    if (button == _correctButton && _signalTime != null) {
+    // 合図後 - 正しいボタンが押されたか確認
+    if (punch == _correctPunch && _signalTime != null) {
       final reactionTimeMs = DateTime.now().difference(_signalTime!).inMilliseconds;
-      _showResult(isFalseStart: false, reactionTimeMs: reactionTimeMs);
+      
+      // 反応時間を記録
+      _reactionTimes.add(reactionTimeMs);
+      
+      // 3回連続の判定
+      if (_currentRound >= 3) {
+        // 3回終了 - リザルト表示
+        _showResult(isFalseStart: false);
+      } else {
+        // 次のラウンドへ
+        _signalTimer?.cancel();
+        setState(() {
+          _isWaiting = false;
+        });
+        
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            _startNewRound();
+          }
+        });
+      }
     }
+    // 間違ったボタンを押した場合は何もしない（押し続けることができる）
   }
 
-  void _showResult({required bool isFalseStart, int? reactionTimeMs}) {
+  void _showResult({required bool isFalseStart}) {
     final gameState = Provider.of<GameStateProvider>(context, listen: false);
     
     if (isFalseStart) {
       gameState.setResult(reactionTimeMs: null, isWin: false);
     } else {
-      gameState.setResult(reactionTimeMs: reactionTimeMs, isWin: true);
+      // 3回の合計時間を計算
+      final totalTime = _reactionTimes.reduce((a, b) => a + b);
+      gameState.setBoxingResult(
+        round1Time: _reactionTimes[0],
+        round2Time: _reactionTimes[1],
+        round3Time: _reactionTimes[2],
+        totalTime: totalTime,
+      );
     }
 
     Navigator.pushReplacement(
@@ -103,153 +182,102 @@ class _BoxingScreenState extends State<BoxingScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFDC143C),
-              Color(0xFF8B0000),
-              Color(0xFF5C0000),
-            ],
+          // ボクシング背景画像を使用
+          image: DecorationImage(
+            image: AssetImage('assets/images/boxing_background.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        child: Stack(
-          children: [
-            // ヴィンテージ紙テクスチャ
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _VintagePaperPainter(),
-              ),
+        child: Container(
+          // 半透明の赤いオーバーレイ
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFDC143C).withValues(alpha: 0.3),
+                Color(0xFF8B0000).withValues(alpha: 0.5),
+                Color(0xFF5C0000).withValues(alpha: 0.6),
+              ],
             ),
-            
-            SafeArea(
-              child: Stack(
-                children: [
-                  // 閉じるボタン
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: IconButton(
-                      icon: Icon(Icons.close, color: Color(0xFFE6D4BC), size: 32),
-                      onPressed: () => Navigator.pop(context),
-                    ),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // 閉じるボタン
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: Colors.white, size: 32),
+                    onPressed: () => Navigator.pop(context),
                   ),
+                ),
 
-                  // メインコンテンツ
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // タイトル
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3D2E1F).withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Color(0xFFDC143C), width: 2),
-                          ),
-                          child: Text(
-                            _isFalseStart ? 'FALSE START!' : (_hasSignal ? '正しい拳を撃て!' : 'WAIT'),
-                            style: TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: _isFalseStart ? Colors.red.shade300 : Color(0xFFE6D4BC),
-                              letterSpacing: 3,
-                              fontFamily: 'serif',
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.5),
-                                  offset: Offset(3, 3),
-                                  blurRadius: 5,
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
+                // メインコンテンツ
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ラウンド表示
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Color(0xFFDC143C), width: 2),
+                        ),
+                        child: Text(
+                          'ROUND $_currentRound / 3',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 2,
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 60),
+                      const SizedBox(height: 20),
 
-                        // 説明テキスト
-                        if (_isWaiting && !_hasSignal && !_isFalseStart)
-                          Text(
-                            '合図を待て...',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Color(0xFFE6D4BC),
-                              letterSpacing: 2,
-                              fontFamily: 'serif',
-                            ),
+                      // 状態表示
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _isFalseStart ? Colors.red : Color(0xFFDC143C), 
+                            width: 2,
                           ),
-
-                        const SizedBox(height: 40),
-
-                        // 左右ボタン
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _buildBoxingButton('left', 'LEFT'),
-                            const SizedBox(width: 60),
-                            _buildBoxingButton('right', 'RIGHT'),
-                          ],
                         ),
-                      ],
-                    ),
+                        child: Text(
+                          _isFalseStart 
+                              ? 'FALSE START!' 
+                              : (_hasSignal ? 'HIT NOW!' : 'WAIT...'),
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: _isFalseStart ? Colors.red.shade300 : Colors.white,
+                            letterSpacing: 3,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.8),
+                                offset: Offset(2, 2),
+                                blurRadius: 5,
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      // 10個のパンチボタン（5行2列）
+                      _buildPunchButtons(),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBoxingButton(String button, String label) {
-    final bool isCorrect = button == _correctButton;
-    final bool shouldHighlight = _hasSignal && isCorrect && !_isFalseStart;
-
-    return GestureDetector(
-      onTap: () => _onButtonPress(button),
-      child: Container(
-        width: 140,
-        height: 140,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: shouldHighlight
-                ? [Color(0xFFE6D4BC), Color(0xFFD8C9B4)]
-                : [Color(0xFF5C4A3A), Color(0xFF3D2E1F)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: shouldHighlight 
-                  ? Color(0xFFDC143C).withValues(alpha: 0.6) 
-                  : Colors.black.withValues(alpha: 0.5),
-              blurRadius: shouldHighlight ? 30 : 20,
-              offset: Offset(0, 8),
-              spreadRadius: shouldHighlight ? 8 : 0,
-            ),
-          ],
-          border: Border.all(
-            color: shouldHighlight ? Color(0xFFDC143C) : Color(0xFF8B6F47),
-            width: shouldHighlight ? 4 : 3,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: shouldHighlight ? Color(0xFF3D2E1F) : Color(0xFFE6D4BC),
-              letterSpacing: 2,
-              fontFamily: 'serif',
-              shadows: [
-                Shadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  offset: Offset(2, 2),
-                  blurRadius: 3,
                 ),
               ],
             ),
@@ -258,32 +286,103 @@ class _BoxingScreenState extends State<BoxingScreen> {
       ),
     );
   }
-}
 
-// ヴィンテージ紙テクスチャペインター
-class _VintagePaperPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint();
-    final random = Random(42);
-    
-    // 紙の繊維テクスチャ
-    for (var i = 0; i < 80; i++) {
-      paint.color = Color(0xFFE6D4BC).withValues(alpha: 0.03);
-      final x = size.width * random.nextDouble();
-      final y = size.height * random.nextDouble();
-      canvas.drawCircle(Offset(x, y), 1.5, paint);
-    }
-    
-    // 埃・シミ
-    for (var i = 0; i < 25; i++) {
-      paint.color = Color(0xFFE6D4BC).withValues(alpha: 0.05);
-      final x = size.width * random.nextDouble();
-      final y = size.height * random.nextDouble();
-      canvas.drawCircle(Offset(x, y), 3, paint);
-    }
+  // 10個のパンチボタンを生成
+  Widget _buildPunchButtons() {
+    return Container(
+      constraints: BoxConstraints(maxWidth: 500),
+      child: Column(
+        children: [
+          // Row 1: Left Jab, Right Jab
+          _buildButtonRow(PunchType.leftJab, PunchType.rightJab),
+          const SizedBox(height: 12),
+          
+          // Row 2: Left Straight, Right Straight
+          _buildButtonRow(PunchType.leftStraight, PunchType.rightStraight),
+          const SizedBox(height: 12),
+          
+          // Row 3: Left Hook, Right Hook
+          _buildButtonRow(PunchType.leftHook, PunchType.rightHook),
+          const SizedBox(height: 12),
+          
+          // Row 4: Left Uppercut, Right Uppercut
+          _buildButtonRow(PunchType.leftUppercut, PunchType.rightUppercut),
+          const SizedBox(height: 12),
+          
+          // Row 5: Left Body Shot, Right Body Shot
+          _buildButtonRow(PunchType.leftBodyShot, PunchType.rightBodyShot),
+        ],
+      ),
+    );
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  // 1行分のボタン（左右2つ）
+  Widget _buildButtonRow(PunchType leftPunch, PunchType rightPunch) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(child: _buildPunchButton(leftPunch)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildPunchButton(rightPunch)),
+        ],
+      ),
+    );
+  }
+
+  // 個別のパンチボタン
+  Widget _buildPunchButton(PunchType punch) {
+    final bool isCorrect = punch == _correctPunch;
+    final bool shouldHighlight = _hasSignal && isCorrect && !_isFalseStart;
+
+    return GestureDetector(
+      onTap: () => _onPunchButtonPress(punch),
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: shouldHighlight
+                ? [Color(0xFFFFD700), Color(0xFFFFA500)] // ゴールド
+                : [Color(0xFF2C2C2C), Color(0xFF1A1A1A)], // ダークグレー
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: shouldHighlight 
+                  ? Color(0xFFFFD700).withValues(alpha: 0.8) 
+                  : Colors.black.withValues(alpha: 0.5),
+              blurRadius: shouldHighlight ? 20 : 8,
+              offset: Offset(0, 4),
+              spreadRadius: shouldHighlight ? 4 : 0,
+            ),
+          ],
+          border: Border.all(
+            color: shouldHighlight ? Color(0xFFFFD700) : Color(0xFF444444),
+            width: shouldHighlight ? 3 : 2,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            getPunchLabel(punch),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: shouldHighlight ? Colors.black : Colors.white,
+              letterSpacing: 0.5,
+              shadows: shouldHighlight ? [] : [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.8),
+                  offset: Offset(1, 1),
+                  blurRadius: 2,
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
 }

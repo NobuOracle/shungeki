@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
 import 'result_screen.dart';
@@ -75,10 +76,10 @@ class _WizardScreenState extends State<WizardScreen> {
     });
     
     if (kDebugMode) {
-      print('=== Wizard Screen: 数字配置をシャッフルしました ===');
+      debugPrint('=== Wizard Screen: 数字配置をシャッフルしました ===');
       for (var pair in _numberPositionPairs) {
         final pos = pair['position'] as Offset;
-        print('  数字${pair['number']}: (${pos.dx.toStringAsFixed(2)}, ${pos.dy.toStringAsFixed(2)})');
+        debugPrint('  数字${pair['number']}: (${pos.dx.toStringAsFixed(2)}, ${pos.dy.toStringAsFixed(2)})');
       }
     }
   }
@@ -164,66 +165,100 @@ class _WizardScreenState extends State<WizardScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF4B0082).withOpacity(0.8),
-              Color(0xFF2E0854),
-              Color(0xFF1A0033),
-            ],
+          // ウィザード背景画像を使用
+          image: DecorationImage(
+            image: AssetImage('assets/images/wizard_background.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Positioned(
-                top: 16,
-                right: 16,
-                child: IconButton(
-                  icon: Icon(Icons.close, color: Colors.white70, size: 32),
-                  onPressed: () => Navigator.pop(context),
+        child: Container(
+          // 半透明の紫色オーバーレイ
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF4B0082).withValues(alpha: 0.4),
+                Color(0xFF2E0854).withValues(alpha: 0.6),
+                Color(0xFF1A0033).withValues(alpha: 0.7),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: Colors.white, size: 32),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
-              ),
 
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _isFalseStart ? 'FALSE START!' : (_isWaiting ? (_hasSignal ? '1→2→3→4→5の順にタップ!' : '合図を待て...') : 'WIZARD'),
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(height: 60),
-
-                    // 五芒星とボタン
-                    SizedBox(
-                      width: 300,
-                      height: 300,
-                      child: Stack(
-                        children: [
-                          // 五芒星の線を描画
-                          CustomPaint(
-                            size: Size(300, 300),
-                            painter: _StarPainter(),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // 状態表示
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _isFalseStart ? Colors.red : Color(0xFF9370DB),
+                            width: 2,
                           ),
-                          
-                          // 数字ボタン（ランダム配置）
-                          ..._buildNumberButtons(),
-                        ],
+                        ),
+                        child: Text(
+                          _isFalseStart 
+                              ? 'FALSE START!' 
+                              : (_isWaiting 
+                                  ? (_hasSignal ? '1→2→3→4→5の順にタップ!' : '合図を待て...') 
+                                  : 'WIZARD'),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: _isFalseStart ? Colors.red.shade300 : Colors.white,
+                            letterSpacing: 1,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.8),
+                                offset: Offset(2, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 60),
+
+                      // 五芒星とボタン
+                      SizedBox(
+                        width: 300,
+                        height: 300,
+                        child: Stack(
+                          children: [
+                            // 五芒星の線を描画
+                            CustomPaint(
+                              size: Size(300, 300),
+                              painter: _StarPainter(),
+                            ),
+                            
+                            // 数字ボタン（ランダム配置）
+                            // 【重要】早押しタイミング前は数字を隠す
+                            ..._buildNumberButtons(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -237,6 +272,9 @@ class _WizardScreenState extends State<WizardScreen> {
       final position = pair['position'] as Offset;
       final bool isNext = number == _currentStep;
       final bool isCompleted = number < _currentStep;
+      
+      // 【新規追加】早押しタイミング前は数字を隠す
+      final bool shouldShowNumber = _hasSignal;
 
       return Positioned(
         left: position.dx * 300 - 25,
@@ -249,29 +287,48 @@ class _WizardScreenState extends State<WizardScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isCompleted 
-                  ? Colors.green.withOpacity(0.6)
-                  : (isNext && _hasSignal ? Colors.amber : Colors.purple.shade300),
+                  ? Colors.green.withValues(alpha: 0.6)
+                  : (isNext && _hasSignal ? Colors.amber : Color(0xFF9370DB).withValues(alpha: 0.8)),
               border: Border.all(
                 color: Colors.white,
                 width: isNext && _hasSignal ? 3 : 2,
               ),
               boxShadow: isNext && _hasSignal ? [
                 BoxShadow(
-                  color: Colors.amber.withOpacity(0.6),
-                  blurRadius: 15,
-                  spreadRadius: 3,
+                  color: Colors.amber.withValues(alpha: 0.8),
+                  blurRadius: 20,
+                  spreadRadius: 4,
                 ),
-              ] : [],
+              ] : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
             child: Center(
-              child: Text(
-                '$number',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              child: shouldShowNumber
+                  ? Text(
+                      '$number',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            offset: Offset(1, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    )
+                  : Icon(
+                      Icons.help_outline,
+                      color: Colors.white.withValues(alpha: 0.6),
+                      size: 28,
+                    ),
             ),
           ),
         ),
@@ -285,9 +342,10 @@ class _StarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.purple.shade700.withOpacity(0.4)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..color = Color(0xFF9370DB).withValues(alpha: 0.5)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
     final centerX = size.width * 0.5;
     final centerY = size.height * 0.45;
@@ -302,28 +360,24 @@ class _StarPainter extends CustomPainter {
       );
     });
 
-    // 五芒星を描画（頂点を線で結ぶ: 0→2→4→1→3→0）
+    // 五芒星を描画（各頂点を2つ飛ばしで結ぶ）
     final path = Path();
     path.moveTo(points[0].dx, points[0].dy);
-    path.lineTo(points[2].dx, points[2].dy);
-    path.lineTo(points[4].dx, points[4].dy);
-    path.lineTo(points[1].dx, points[1].dy);
-    path.lineTo(points[3].dx, points[3].dy);
+    for (var i = 0; i < 5; i++) {
+      final nextIndex = (i * 2) % 5;
+      path.lineTo(points[nextIndex].dx, points[nextIndex].dy);
+    }
     path.close();
 
+    // 光輝エフェクトのために複数回描画
+    canvas.drawPath(path, paint);
+    
+    // 内側に光輝を追加
+    paint.strokeWidth = 1.5;
+    paint.color = Colors.white.withValues(alpha: 0.3);
     canvas.drawPath(path, paint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// デバッグモード判定
-bool get kDebugMode {
-  bool debugMode = false;
-  assert(() {
-    debugMode = true;
-    return true;
-  }());
-  return debugMode;
 }

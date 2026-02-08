@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "32307219162",
+    "project_id": "shungeki-quickdraw",
+    "storage_bucket": "shungeki-quickdraw.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:32307219162:android:332660fea34e367563b3e3",
+        "android_client_info": {
+          "package_name": "com.flashduel.flash_duel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRJpVe7xu_iXvlG6epthHZlNHcNykoqBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
