@@ -6,6 +6,7 @@ import 'lobby_screen.dart';
 import 'settings_dialog.dart';
 import 'duel_host_screen.dart';
 import 'duel_join_screen.dart';
+import 'profile_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -123,6 +124,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   child: Icon(
                     Icons.settings,
+                    color: Color(0xFFE6D4BC),
+                    size: 28,
+                  ),
+                ),
+              ),
+            ),
+            
+            // プロフィールボタン（左上）
+            Positioned(
+              top: 16,
+              left: 16,
+              child: GestureDetector(
+                onTap: () {
+                  _audioService.playUISelect();
+                  showDialog(
+                    context: context,
+                    builder: (context) => const ProfileModal(),
+                  );
+                },
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF3D2E1F),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Color(0xFF8B6F47),
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.person,
                     color: Color(0xFFE6D4BC),
                     size: 28,
                   ),
