@@ -7,6 +7,7 @@ import 'providers/settings_provider.dart';
 import 'providers/profile_provider.dart';
 import 'services/firebase_service.dart';
 import 'services/title_master_service.dart';
+import 'services/bad_word_service.dart';
 import 'repositories/local_profile_repository.dart';
 import 'screens/home_screen.dart';
 
@@ -22,8 +23,17 @@ void main() async {
   
   // ProfileProvider の初期化
   final titleMasterService = TitleMasterService();
+  final badWordService = BadWordService();
   final prefs = await SharedPreferences.getInstance();
-  final localProfileRepository = LocalProfileRepository(prefs, titleMasterService);
+  
+  // BadWordService の初期化
+  try {
+    await badWordService.load();
+  } catch (e) {
+    debugPrint('BadWordService初期化エラー: $e');
+  }
+  
+  final localProfileRepository = LocalProfileRepository(prefs, titleMasterService, badWordService);
   final profileProvider = ProfileProvider(
     titleMaster: titleMasterService,
     repo: localProfileRepository,

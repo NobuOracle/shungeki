@@ -4,21 +4,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player_profile.dart';
 import '../models/title_definition.dart';
 import '../services/title_master_service.dart';
+import '../services/bad_word_service.dart';
 
 /// ローカルプロフィールリポジトリ（SharedPreferences）
 class LocalProfileRepository {
   static const String _keyProfile = 'player_profile';
-  
-  // 不適切ワード簡易フィルタ（最小セット）
-  static final List<String> _bannedWords = [
-    'バカ', 'ばか', 'アホ', 'あほ', 'バカ', 'クソ', 'くそ', 'クズ', 'くず',
-    'death', 'kill', 'fuck', 'shit', 'damn', 'bitch',
-  ];
 
   final SharedPreferences _prefs;
   final TitleMasterService _titleMaster;
+  final BadWordService _badWordService;
 
-  LocalProfileRepository(this._prefs, this._titleMaster);
+  LocalProfileRepository(this._prefs, this._titleMaster, this._badWordService);
 
   /// プロフィール読み込み
   Future<PlayerProfile> load() async {
@@ -60,8 +56,8 @@ class LocalProfileRepository {
     }
     
     // 最大文字数チェック
-    if (trimmed.length > 10) {
-      return 'プレイヤー名は10文字以内にしてください';
+    if (trimmed.length > 20) {
+      return 'プレイヤー名は20文字以内にしてください';
     }
     
     // 改行チェック
@@ -69,12 +65,9 @@ class LocalProfileRepository {
       return 'プレイヤー名に改行を含めることはできません';
     }
     
-    // 不適切ワードチェック
-    final lowerTrimmed = trimmed.toLowerCase();
-    for (final word in _bannedWords) {
-      if (lowerTrimmed.contains(word.toLowerCase())) {
-        return '使用できない単語が含まれています';
-      }
+    // 不適切ワードチェック（BadWordService使用）
+    if (_badWordService.containsBadWord(trimmed)) {
+      return '使用できない単語が含まれています';
     }
     
     return null; // 検証OK

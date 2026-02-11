@@ -33,6 +33,8 @@ class PlayerProfile {
   final List<String> unlockedTitleIds;
   final Map<String, int> playCountByMode;
   final Map<String, List<BestRecord>> bestRecordsByMode;
+  final Map<String, int> maxWinStreakByMode; // 最大連勝数（2人対戦のみ）
+  final Map<String, int> currentWinStreakByMode; // 現在の連勝数（2人対戦のみ）
 
   PlayerProfile({
     required this.playerName,
@@ -40,6 +42,8 @@ class PlayerProfile {
     required this.unlockedTitleIds,
     required this.playCountByMode,
     required this.bestRecordsByMode,
+    required this.maxWinStreakByMode,
+    required this.currentWinStreakByMode,
   });
 
   /// デフォルトプロフィール
@@ -59,6 +63,18 @@ class PlayerProfile {
         'BOXING': [],
         'WIZARD': [],
         'SAMURAI': [],
+      },
+      maxWinStreakByMode: {
+        'WESTERN': 0,
+        'BOXING': 0,
+        'WIZARD': 0,
+        'SAMURAI': 0,
+      },
+      currentWinStreakByMode: {
+        'WESTERN': 0,
+        'BOXING': 0,
+        'WIZARD': 0,
+        'SAMURAI': 0,
       },
     );
   }
@@ -81,6 +97,8 @@ class PlayerProfile {
       unlockedTitleIds: List<String>.from(json['unlockedTitleIds'] as List? ?? []),
       playCountByMode: Map<String, int>.from(json['playCountByMode'] as Map? ?? {}),
       bestRecordsByMode: bestRecordsByMode,
+      maxWinStreakByMode: Map<String, int>.from(json['maxWinStreakByMode'] as Map? ?? {}),
+      currentWinStreakByMode: Map<String, int>.from(json['currentWinStreakByMode'] as Map? ?? {}),
     );
   }
 
@@ -97,6 +115,8 @@ class PlayerProfile {
       'unlockedTitleIds': unlockedTitleIds,
       'playCountByMode': playCountByMode,
       'bestRecordsByMode': bestRecordsJson,
+      'maxWinStreakByMode': maxWinStreakByMode,
+      'currentWinStreakByMode': currentWinStreakByMode,
     };
   }
 
@@ -107,6 +127,8 @@ class PlayerProfile {
     List<String>? unlockedTitleIds,
     Map<String, int>? playCountByMode,
     Map<String, List<BestRecord>>? bestRecordsByMode,
+    Map<String, int>? maxWinStreakByMode,
+    Map<String, int>? currentWinStreakByMode,
   }) {
     return PlayerProfile(
       playerName: playerName ?? this.playerName,
@@ -114,6 +136,8 @@ class PlayerProfile {
       unlockedTitleIds: unlockedTitleIds ?? this.unlockedTitleIds,
       playCountByMode: playCountByMode ?? this.playCountByMode,
       bestRecordsByMode: bestRecordsByMode ?? this.bestRecordsByMode,
+      maxWinStreakByMode: maxWinStreakByMode ?? this.maxWinStreakByMode,
+      currentWinStreakByMode: currentWinStreakByMode ?? this.currentWinStreakByMode,
     );
   }
 }

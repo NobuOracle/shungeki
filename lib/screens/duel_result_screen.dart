@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/duel_room.dart';
 import '../services/audio_service.dart';
 import '../services/duel_service.dart';
+import '../providers/profile_provider.dart';
 
 /// 2人対戦リザルト画面（最小実装）
 /// 
@@ -33,6 +35,38 @@ class _DuelResultScreenState extends State<DuelResultScreen> {
   void initState() {
     super.initState();
     _calculateResult();
+    
+    // 勝敗結果をプロフィールに記録（画面表示後）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _recordDuelResult();
+    });
+  }
+
+  /// 2人対戦の勝敗をプロフィールに記録
+  Future<void> _recordDuelResult() async {
+    final profileProvider = context.read<ProfileProvider>();
+
+    // モード名を取得
+    final modeMap = {
+      'WESTERN': 'WESTERN',
+      'BOXING': 'BOXING',
+      'WIZARD': 'WIZARD',
+      'SAMURAI': 'SAMURAI',
+    };
+    final mode = modeMap[widget.room.mode];
+    if (mode == null) return;
+
+    try {
+      if (_isWinner) {
+        // 勝利処理
+        await profileProvider.onDuelWin(mode);
+      } else if (!_resultMessage.contains('引き分け') && !_resultMessage.contains('エラー')) {
+        // 敗北処理（引き分けとエラーは除外）
+        await profileProvider.onDuelLose(mode);
+      }
+    } catch (e) {
+      debugPrint('❌ [DuelResultScreen] 勝敗記録エラー: $e');
+    }
   }
 
   /// 勝敗を計算

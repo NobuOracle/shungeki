@@ -179,4 +179,61 @@ class ProfileProvider with ChangeNotifier {
       'titleCount': _profile!.unlockedTitleIds.length,
     };
   }
+
+  /// 2人対戦の勝敗処理（勝利）
+  /// 
+  /// 【注意】ソロプレイでは呼ばないこと
+  Future<void> onDuelWin(String mode) async {
+    if (_profile == null) return;
+
+    try {
+      final newCurrent = Map<String, int>.from(_profile!.currentWinStreakByMode);
+      final newMax = Map<String, int>.from(_profile!.maxWinStreakByMode);
+
+      // 現在の連勝数を+1
+      final currentStreak = (newCurrent[mode] ?? 0) + 1;
+      newCurrent[mode] = currentStreak;
+
+      // 最大連勝数を更新
+      final maxStreak = newMax[mode] ?? 0;
+      if (currentStreak > maxStreak) {
+        newMax[mode] = currentStreak;
+        debugPrint('🏆 [ProfileProvider] 最大連勝記録更新: $mode → $currentStreak連勝');
+      }
+
+      _profile = _profile!.copyWith(
+        currentWinStreakByMode: newCurrent,
+        maxWinStreakByMode: newMax,
+      );
+
+      await _repo.save(_profile!);
+      debugPrint('✅ [ProfileProvider] 連勝更新: $mode → $currentStreak連勝（最大: ${newMax[mode]}）');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ [ProfileProvider] 連勝更新エラー: $e');
+    }
+  }
+
+  /// 2人対戦の勝敗処理（敗北）
+  /// 
+  /// 【注意】ソロプレイでは呼ばないこと
+  Future<void> onDuelLose(String mode) async {
+    if (_profile == null) return;
+
+    try {
+      final newCurrent = Map<String, int>.from(_profile!.currentWinStreakByMode);
+
+      // 連勝をリセット
+      final previousStreak = newCurrent[mode] ?? 0;
+      newCurrent[mode] = 0;
+
+      _profile = _profile!.copyWith(currentWinStreakByMode: newCurrent);
+
+      await _repo.save(_profile!);
+      debugPrint('✅ [ProfileProvider] 連勝リセット: $mode（前回: $previousStreak連勝）');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ [ProfileProvider] 連勝リセットエラー: $e');
+    }
+  }
 }

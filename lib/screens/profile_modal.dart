@@ -308,6 +308,7 @@ class _ProfileModalState extends State<ProfileModal> {
             final modeName = entry.value;
             final records = profile.bestRecordsByMode[mode] ?? [];
             final playCount = profile.playCountByMode[mode] ?? 0;
+            final maxWinStreak = profile.maxWinStreakByMode[mode] ?? 0;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -325,12 +326,26 @@ class _ProfileModalState extends State<ProfileModal> {
                           color: Color(0xFF8B6F47),
                         ),
                       ),
-                      Text(
-                        'プレイ回数: $playCount',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF3D2E1F).withValues(alpha: 0.7),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'プレイ回数: $playCount',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF3D2E1F).withValues(alpha: 0.7),
+                            ),
+                          ),
+                          if (maxWinStreak > 0)
+                            Text(
+                              '最大連勝: $maxWinStreak',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8B6F47),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -512,7 +527,7 @@ class TitleListModal extends StatelessWidget {
                     ),
                     child: ListTile(
                       title: Text(
-                        title.name,
+                        isUnlocked ? title.name : '？？？',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -523,7 +538,7 @@ class TitleListModal extends StatelessWidget {
                         ),
                       ),
                       subtitle: Text(
-                        title.description,
+                        isUnlocked ? title.description : '未解放',
                         style: TextStyle(
                           fontSize: 12,
                           color: isUnlocked

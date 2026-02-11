@@ -2,10 +2,77 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
+
+  @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // ゲーム終了処理を画面表示後に実行
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _recordGameResult();
+    });
+  }
+
+  Future<void> _recordGameResult() async {
+    final gameState = context.read<GameStateProvider>();
+    final profileProvider = context.read<ProfileProvider>();
+
+    // 勝利時のみ記録
+    if (!gameState.isWin || gameState.reactionTimeMs == null) {
+      return;
+    }
+
+    // モード名を取得
+    final modeMap = {
+      GameMode.western: 'WESTERN',
+      GameMode.boxing: 'BOXING',
+      GameMode.wizard: 'WIZARD',
+      GameMode.samurai: 'SAMURAI',
+    };
+    final mode = modeMap[gameState.currentMode];
+    if (mode == null) return;
+
+    // 記録時刻を取得
+    final int timeMs;
+    if (gameState.currentMode == GameMode.boxing && gameState.boxingTotalTime != null) {
+      timeMs = gameState.boxingTotalTime!; // Boxingは合計タイム
+    } else {
+      timeMs = gameState.reactionTimeMs!;
+    }
+
+    // プロフィール更新
+    try {
+      final newTitles = await profileProvider.onGameFinished(
+        mode: mode,
+        timeMs: timeMs,
+        achievedAt: DateTime.now(),
+      );
+
+      // 称号獲得時の通知
+      if (newTitles.isNotEmpty && mounted) {
+        for (final title in newTitles) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🎖️ 称号獲得: ${title.name}'),
+              backgroundColor: Color(0xFF8B6F47),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ [ResultScreen] プロフィール更新エラー: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
