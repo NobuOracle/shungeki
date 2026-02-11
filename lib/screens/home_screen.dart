@@ -78,95 +78,137 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: _buildStartButton(),
                         ),
                         
-                        const SizedBox(height: 12),
-                        
-                        // JOINボタン（2人対戦用）
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: _buildJoinButton(),
-                        ),
-                        
                         const SizedBox(height: 20),
                       ],
                     ),
                   ),
                 ),
             
-            // 設定ボタン（右上）
+            // 右上ボタン列（プロフィール／設定／Join）
             Positioned(
               top: 16,
               right: 16,
-              child: GestureDetector(
-                onTap: () {
-                  _audioService.playUISelect(); // UISelectSE
-                  showDialog(
-                    context: context,
-                    builder: (context) => const SettingsDialog(),
-                  );
-                },
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF3D2E1F),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Color(0xFF8B6F47),
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // プロフィールボタン
+                  GestureDetector(
+                    onTap: () {
+                      _audioService.playUISelect();
+                      showDialog(
+                        context: context,
+                        builder: (context) => const ProfileModal(),
+                      );
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF3D2E1F),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Color(0xFF8B6F47),
+                          width: 2.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.settings,
-                    color: Color(0xFFE6D4BC),
-                    size: 28,
-                  ),
-                ),
-              ),
-            ),
-            
-            // プロフィールボタン（左上）
-            Positioned(
-              top: 16,
-              left: 16,
-              child: GestureDetector(
-                onTap: () {
-                  _audioService.playUISelect();
-                  showDialog(
-                    context: context,
-                    builder: (context) => const ProfileModal(),
-                  );
-                },
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF3D2E1F),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Color(0xFF8B6F47),
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
+                      child: Icon(
+                        Icons.person,
+                        color: Color(0xFFE6D4BC),
+                        size: 24,
                       ),
-                    ],
+                    ),
                   ),
-                  child: Icon(
-                    Icons.person,
-                    color: Color(0xFFE6D4BC),
-                    size: 28,
+                  
+                  const SizedBox(width: 10),
+                  
+                  // 設定ボタン
+                  GestureDetector(
+                    onTap: () {
+                      _audioService.playUISelect();
+                      showDialog(
+                        context: context,
+                        builder: (context) => const SettingsDialog(),
+                      );
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF3D2E1F),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Color(0xFF8B6F47),
+                          width: 2.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.settings,
+                        color: Color(0xFFE6D4BC),
+                        size: 24,
+                      ),
+                    ),
                   ),
-                ),
+                  
+                  const SizedBox(width: 10),
+                  
+                  // 小型Joinボタン
+                  GestureDetector(
+                    onTap: () {
+                      _audioService.playUISelect();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DuelJoinScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 64,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF3D2E1F),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Color(0xFF8B6F47),
+                          width: 2.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          'JOIN',
+                          style: TextStyle(
+                            color: Color(0xFFE6D4BC),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                            fontFamily: 'serif',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -395,6 +437,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // STARTボタン（古びた木材風）
   Widget _buildStartButton() {
     final isEnabled = _selectedMode != null;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final buttonWidth = screenWidth * 0.9; // 画面幅の90%
     
     return GestureDetector(
       onTap: isEnabled ? () {
@@ -438,26 +482,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           }
         }
       } : null,
-      child: Container(
-        width: double.infinity,
-        height: 80,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isEnabled ? [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ] : [],
-        ),
-        child: Opacity(
-          opacity: isEnabled ? 1.0 : 0.5,
-          child: ClipRRect(
+      child: Center(
+        child: Container(
+          width: buttonWidth,
+          constraints: BoxConstraints(
+            maxWidth: 600, // 最大幅を設定
+          ),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/images/StartButton.png',
-              fit: BoxFit.cover,
+            boxShadow: isEnabled ? [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ] : [],
+          ),
+          child: Opacity(
+            opacity: isEnabled ? 1.0 : 0.5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: AspectRatio(
+                aspectRatio: 5.0, // 画像の縦横比に合わせて調整（例: 5:1）
+                child: Image.asset(
+                  'assets/images/StartButton.png',
+                  fit: BoxFit.contain, // 縦横比を維持
+                ),
+              ),
             ),
           ),
         ),
@@ -465,42 +516,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // JOINボタン（2人対戦参加用）
-  Widget _buildJoinButton() {
-    return GestureDetector(
-      onTap: () {
-        _audioService.playUISelect();
-        // モード選択不要、直接DuelJoinScreenへ
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DuelJoinScreen(),
-          ),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        height: 80,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            'assets/images/JoinButton.png',
-            fit: BoxFit.cover,
-          ),
-        ),
-      ),
-    );
-  }
+
 
   // プレイヤー人数選択UI
   Widget _buildPlayerCountSelector() {
