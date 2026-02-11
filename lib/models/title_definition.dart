@@ -33,29 +33,38 @@ class TitleDefinition {
 
 /// 称号獲得条件
 class TitleUnlockCondition {
-  final String type; // "playCount" など
-  final String mode; // "WESTERN", "BOXING", "WIZARD", "SAMURAI"
-  final int count;
+  final String type; // "playCount", "bestMsAtMost", "bestMsExactly", etc.
+  final String? mode; // "WESTERN", "BOXING", "WIZARD", "SAMURAI" (optional)
+  final int? count; // プレイ回数、連勝数など (optional)
+  final int? timeMs; // ベスト記録のミリ秒 (optional)
+  final String? hhmm; // 特定時刻 "HH:MM" (optional)
 
   TitleUnlockCondition({
     required this.type,
-    required this.mode,
-    required this.count,
+    this.mode,
+    this.count,
+    this.timeMs,
+    this.hhmm,
   });
 
   factory TitleUnlockCondition.fromJson(Map<String, dynamic> json) {
     return TitleUnlockCondition(
       type: json['type'] as String,
-      mode: json['mode'] as String,
-      count: json['count'] as int,
+      mode: json['mode'] as String?,
+      count: json['count'] as int?,
+      timeMs: json['timeMs'] as int?,
+      hhmm: json['hhmm'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{
       'type': type,
-      'mode': mode,
-      'count': count,
     };
+    if (mode != null) map['mode'] = mode;
+    if (count != null) map['count'] = count;
+    if (timeMs != null) map['timeMs'] = timeMs;
+    if (hhmm != null) map['hhmm'] = hhmm;
+    return map;
   }
 }

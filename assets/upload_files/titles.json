@@ -1,0 +1,64 @@
+[
+  { "id":"T_WESTERN_PLAY_10", "name":"駆け出しガンマン", "description":"Westernを10回プレイした者に贈られる。", "unlock":{ "type":"playCount", "mode":"WESTERN", "count":10 } },
+  { "id":"T_BOXING_PLAY_10",  "name":"駆け出しボクサー", "description":"Boxingを10回プレイした者に贈られる。",  "unlock":{ "type":"playCount", "mode":"BOXING",  "count":10 } },
+  { "id":"T_WIZARD_PLAY_10",  "name":"駆け出し魔術師",   "description":"Wizardを10回プレイした者に贈られる。",  "unlock":{ "type":"playCount", "mode":"WIZARD",  "count":10 } },
+  { "id":"T_SAMURAI_PLAY_10", "name":"駆け出しサムライ", "description":"Samuraiを10回プレイした者に贈られる。", "unlock":{ "type":"playCount", "mode":"SAMURAI", "count":10 } },
+
+  { "id":"T_WESTERN_PLAY_100", "name":"伝説の早撃ち",   "description":"Westernを100回プレイした証。", "unlock":{ "type":"playCount", "mode":"WESTERN", "count":100 } },
+  { "id":"T_BOXING_PLAY_100",  "name":"鉄拳の挑戦者",   "description":"Boxingを100回プレイした証。",  "unlock":{ "type":"playCount", "mode":"BOXING",  "count":100 } },
+  { "id":"T_WIZARD_PLAY_100",  "name":"星紋の術師",     "description":"Wizardを100回プレイした証。",  "unlock":{ "type":"playCount", "mode":"WIZARD",  "count":100 } },
+  { "id":"T_SAMURAI_PLAY_100", "name":"居合の達人",     "description":"Samuraiを100回プレイした証。", "unlock":{ "type":"playCount", "mode":"SAMURAI", "count":100 } },
+
+  { "id":"T_WESTERN_BEST_400", "name":"名うての早撃ち", "description":"Westernで400ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WESTERN", "timeMs":400 } },
+  { "id":"T_WESTERN_BEST_300", "name":"神速の引き金",   "description":"Westernで300ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WESTERN", "timeMs":300 } },
+  { "id":"T_WESTERN_BEST_200", "name":"稲妻の銃声",     "description":"Westernで200ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WESTERN", "timeMs":200 } },
+  { "id":"T_WESTERN_BEST_100", "name":"時を撃つ者",     "description":"Westernで100ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WESTERN", "timeMs":100 } },
+
+  { "id":"T_BOXING_BEST_1500", "name":"プライドの拳",           "description":"Boxingで1500ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"BOXING", "timeMs":1500 } },
+  { "id":"T_BOXING_BEST_1300", "name":"閃光のコンビネーション", "description":"Boxingで1300ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"BOXING", "timeMs":1300 } },
+  { "id":"T_BOXING_BEST_1200", "name":"超反応ボクサー",         "description":"Boxingで1200ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"BOXING", "timeMs":1200 } },
+  { "id":"T_BOXING_BEST_1000", "name":"一撃必倒",               "description":"Boxingで1000ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"BOXING", "timeMs":1000 } },
+
+  { "id":"T_WIZARD_BEST_2500", "name":"見習い占星術師", "description":"Wizardで2500ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WIZARD", "timeMs":2500 } },
+  { "id":"T_WIZARD_BEST_2300", "name":"星読みの加速",   "description":"Wizardで2300ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WIZARD", "timeMs":2300 } },
+  { "id":"T_WIZARD_BEST_2000", "name":"魔弾詠唱",       "description":"Wizardで2000ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WIZARD", "timeMs":2000 } },
+  { "id":"T_WIZARD_BEST_1800", "name":"星界の瞬撃",     "description":"Wizardで1800ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"WIZARD", "timeMs":1800 } },
+
+  { "id":"T_SAMURAI_BEST_400", "name":"風の声",   "description":"Samuraiで400ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":400 } },
+  { "id":"T_SAMURAI_BEST_300", "name":"疾風居合", "description":"Samuraiで300ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":300 } },
+  { "id":"T_SAMURAI_BEST_200", "name":"雷切",     "description":"Samuraiで200ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":200 } },
+  { "id":"T_SAMURAI_BEST_100", "name":"無念無想", "description":"Samuraiで100ms以下を記録。", "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":100 } },
+
+  { "id":"T_DUEL_PLAY_10",  "name":"対戦デビュー", "description":"2人プレイを10回遊んだ。",  "unlock":{ "type":"duelPlayCount", "count":10 } },
+  { "id":"T_DUEL_PLAY_30",  "name":"決闘者",       "description":"2人プレイを30回遊んだ。",  "unlock":{ "type":"duelPlayCount", "count":30 } },
+  { "id":"T_DUEL_PLAY_50",  "name":"修羅の道",     "description":"2人プレイを50回遊んだ。",  "unlock":{ "type":"duelPlayCount", "count":50 } },
+  { "id":"T_DUEL_PLAY_100", "name":"戦場の主",     "description":"2人プレイを100回遊んだ。", "unlock":{ "type":"duelPlayCount", "count":100 } },
+
+  { "id":"T_LOGIN_3",  "name":"街の見回り",     "description":"連続ログイン3日。",  "unlock":{ "type":"loginStreak", "count":3 } },
+  { "id":"T_LOGIN_7",  "name":"保安官の習慣",   "description":"連続ログイン7日。",  "unlock":{ "type":"loginStreak", "count":7 } },
+  { "id":"T_LOGIN_15", "name":"指名手配の影",   "description":"連続ログイン15日。", "unlock":{ "type":"loginStreak", "count":15 } },
+  { "id":"T_LOGIN_30", "name":"伝説の常連",     "description":"連続ログイン30日。", "unlock":{ "type":"loginStreak", "count":30 } },
+
+  { "id":"T_SPECIAL_MIDNIGHT",     "name":"真夜中の決闘",   "description":"深夜0:00にプレイした。", "unlock":{ "type":"playedAtTime", "hhmm":"00:00" } },
+  { "id":"T_SPECIAL_WESTERN_777",  "name":"幸運のガンマン", "description":"Westernで777msを記録。",   "unlock":{ "type":"bestMsExactly", "mode":"WESTERN", "timeMs":777 } },
+
+  { "id":"T_STREAK_WESTERN_2",  "name":"二連の弾丸", "description":"Westernの2人対戦で2連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"WESTERN", "count":2 } },
+  { "id":"T_STREAK_WESTERN_5",  "name":"五連の弾雨", "description":"Westernの2人対戦で5連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"WESTERN", "count":5 } },
+  { "id":"T_STREAK_WESTERN_10", "name":"十連の死神", "description":"Westernの2人対戦で10連勝。", "unlock":{ "type":"duelWinStreak", "mode":"WESTERN", "count":10 } },
+  { "id":"T_STREAK_WESTERN_20", "name":"無限の弾魂", "description":"Westernの2人対戦で20連勝。", "unlock":{ "type":"duelWinStreak", "mode":"WESTERN", "count":20 } },
+
+  { "id":"T_STREAK_BOXING_2",  "name":"二連の拳",   "description":"Boxingの2人対戦で2連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"BOXING", "count":2 } },
+  { "id":"T_STREAK_BOXING_5",  "name":"五連の連打", "description":"Boxingの2人対戦で5連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"BOXING", "count":5 } },
+  { "id":"T_STREAK_BOXING_10", "name":"十連の猛打", "description":"Boxingの2人対戦で10連勝。", "unlock":{ "type":"duelWinStreak", "mode":"BOXING", "count":10 } },
+  { "id":"T_STREAK_BOXING_20", "name":"無限の鉄拳", "description":"Boxingの2人対戦で20連勝。", "unlock":{ "type":"duelWinStreak", "mode":"BOXING", "count":20 } },
+
+  { "id":"T_STREAK_WIZARD_2",  "name":"二連の魔術",   "description":"Wizardの2人対戦で2連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"WIZARD", "count":2 } },
+  { "id":"T_STREAK_WIZARD_5",  "name":"五連の呪連砲", "description":"Wizardの2人対戦で5連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"WIZARD", "count":5 } },
+  { "id":"T_STREAK_WIZARD_10", "name":"十連の大魔道", "description":"Wizardの2人対戦で10連勝。", "unlock":{ "type":"duelWinStreak", "mode":"WIZARD", "count":10 } },
+  { "id":"T_STREAK_WIZARD_20", "name":"無限の星術",   "description":"Wizardの2人対戦で20連勝。", "unlock":{ "type":"duelWinStreak", "mode":"WIZARD", "count":20 } },
+
+  { "id":"T_STREAK_SAMURAI_2",  "name":"二連の刃",     "description":"Samuraiの2人対戦で2連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"SAMURAI", "count":2 } },
+  { "id":"T_STREAK_SAMURAI_5",  "name":"五連の斬撃",   "description":"Samuraiの2人対戦で5連勝。",  "unlock":{ "type":"duelWinStreak", "mode":"SAMURAI", "count":5 } },
+  { "id":"T_STREAK_SAMURAI_10", "name":"十連の居合人", "description":"Samuraiの2人対戦で10連勝。", "unlock":{ "type":"duelWinStreak", "mode":"SAMURAI", "count":10 } },
+  { "id":"T_STREAK_SAMURAI_20", "name":"無限の剣聖",   "description":"Samuraiの2人対戦で20連勝。", "unlock":{ "type":"duelWinStreak", "mode":"SAMURAI", "count":20 } }
+]

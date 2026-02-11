@@ -143,10 +143,13 @@ class LocalProfileRepository {
   /// 称号獲得チェック＆獲得
   /// 
   /// 返り値: 新たに獲得した称号のリスト
-  Future<List<TitleDefinition>> checkAndUnlockTitles(PlayerProfile current) async {
+  Future<List<TitleDefinition>> checkAndUnlockTitles(
+    PlayerProfile current, {
+    Map<String, dynamic>? lastGameResult,
+  }) async {
     final newTitles = _titleMaster.checkUnlockableTitles(
-      playCountByMode: current.playCountByMode,
-      unlockedTitleIds: current.unlockedTitleIds,
+      profile: current,
+      lastGameResult: lastGameResult,
     );
     
     if (newTitles.isEmpty) return [];

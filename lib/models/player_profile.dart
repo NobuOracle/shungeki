@@ -35,6 +35,8 @@ class PlayerProfile {
   final Map<String, List<BestRecord>> bestRecordsByMode;
   final Map<String, int> maxWinStreakByMode; // 最大連勝数（2人対戦のみ）
   final Map<String, int> currentWinStreakByMode; // 現在の連勝数（2人対戦のみ）
+  final int duelPlayCount; // 2人対戦の総プレイ回数
+  final int loginStreak; // 連続ログイン日数
 
   PlayerProfile({
     required this.playerName,
@@ -44,6 +46,8 @@ class PlayerProfile {
     required this.bestRecordsByMode,
     required this.maxWinStreakByMode,
     required this.currentWinStreakByMode,
+    this.duelPlayCount = 0,
+    this.loginStreak = 0,
   });
 
   /// デフォルトプロフィール
@@ -76,6 +80,8 @@ class PlayerProfile {
         'WIZARD': 0,
         'SAMURAI': 0,
       },
+      duelPlayCount: 0,
+      loginStreak: 0,
     );
   }
 
@@ -99,6 +105,8 @@ class PlayerProfile {
       bestRecordsByMode: bestRecordsByMode,
       maxWinStreakByMode: Map<String, int>.from(json['maxWinStreakByMode'] as Map? ?? {}),
       currentWinStreakByMode: Map<String, int>.from(json['currentWinStreakByMode'] as Map? ?? {}),
+      duelPlayCount: json['duelPlayCount'] as int? ?? 0,
+      loginStreak: json['loginStreak'] as int? ?? 0,
     );
   }
 
@@ -117,6 +125,8 @@ class PlayerProfile {
       'bestRecordsByMode': bestRecordsJson,
       'maxWinStreakByMode': maxWinStreakByMode,
       'currentWinStreakByMode': currentWinStreakByMode,
+      'duelPlayCount': duelPlayCount,
+      'loginStreak': loginStreak,
     };
   }
 
@@ -129,6 +139,8 @@ class PlayerProfile {
     Map<String, List<BestRecord>>? bestRecordsByMode,
     Map<String, int>? maxWinStreakByMode,
     Map<String, int>? currentWinStreakByMode,
+    int? duelPlayCount,
+    int? loginStreak,
   }) {
     return PlayerProfile(
       playerName: playerName ?? this.playerName,
@@ -138,6 +150,8 @@ class PlayerProfile {
       bestRecordsByMode: bestRecordsByMode ?? this.bestRecordsByMode,
       maxWinStreakByMode: maxWinStreakByMode ?? this.maxWinStreakByMode,
       currentWinStreakByMode: currentWinStreakByMode ?? this.currentWinStreakByMode,
+      duelPlayCount: duelPlayCount ?? this.duelPlayCount,
+      loginStreak: loginStreak ?? this.loginStreak,
     );
   }
 }

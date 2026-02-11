@@ -140,8 +140,16 @@ class ProfileProvider with ChangeNotifier {
         achievedAt: achievedAt,
       );
       
-      // 3. 称号獲得判定
-      final newTitles = await _repo.checkAndUnlockTitles(_profile!);
+      // 3. 称号獲得判定（ゲーム完了時刻も渡す）
+      final lastGameResult = {
+        'mode': mode,
+        'timeMs': timeMs,
+        'completedAt': achievedAt,
+      };
+      final newTitles = await _repo.checkAndUnlockTitles(
+        _profile!,
+        lastGameResult: lastGameResult,
+      );
       
       if (newTitles.isNotEmpty) {
         // 称号獲得後、プロフィールを再読み込みして更新を反映
@@ -205,13 +213,25 @@ class ProfileProvider with ChangeNotifier {
         debugPrint('🏆 [ProfileProvider] 最大連勝記録更新: $mode → $currentStreak連勝');
       }
 
+      // 2人対戦プレイ回数+1
+      final newDuelPlayCount = (_profile!.duelPlayCount) + 1;
+
       _profile = _profile!.copyWith(
         currentWinStreakByMode: newCurrent,
         maxWinStreakByMode: newMax,
+        duelPlayCount: newDuelPlayCount,
       );
 
       await _repo.save(_profile!);
-      debugPrint('✅ [ProfileProvider] 連勝更新: $mode → $currentStreak連勝（最大: ${newMax[mode]}）');
+      
+      // 称号獲得判定
+      final newTitles = await _repo.checkAndUnlockTitles(_profile!);
+      if (newTitles.isNotEmpty) {
+        _profile = await _repo.load();
+        debugPrint('🎖️ [ProfileProvider] 称号獲得: ${newTitles.map((t) => t.name).join(", ")}');
+      }
+      
+      debugPrint('✅ [ProfileProvider] 連勝更新: $mode → $currentStreak連勝（最大: ${newMax[mode]}）, 2人対戦回数: $newDuelPlayCount');
       notifyListeners();
     } catch (e) {
       debugPrint('❌ [ProfileProvider] 連勝更新エラー: $e');
@@ -231,10 +251,24 @@ class ProfileProvider with ChangeNotifier {
       final previousStreak = newCurrent[mode] ?? 0;
       newCurrent[mode] = 0;
 
-      _profile = _profile!.copyWith(currentWinStreakByMode: newCurrent);
+      // 2人対戦プレイ回数+1
+      final newDuelPlayCount = (_profile!.duelPlayCount) + 1;
+
+      _profile = _profile!.copyWith(
+        currentWinStreakByMode: newCurrent,
+        duelPlayCount: newDuelPlayCount,
+      );
 
       await _repo.save(_profile!);
-      debugPrint('✅ [ProfileProvider] 連勝リセット: $mode（前回: $previousStreak連勝）');
+      
+      // 称号獲得判定
+      final newTitles = await _repo.checkAndUnlockTitles(_profile!);
+      if (newTitles.isNotEmpty) {
+        _profile = await _repo.load();
+        debugPrint('🎖️ [ProfileProvider] 称号獲得: ${newTitles.map((t) => t.name).join(", ")}');
+      }
+      
+      debugPrint('✅ [ProfileProvider] 連勝リセット: $mode（前回: $previousStreak連勝）, 2人対戦回数: $newDuelPlayCount');
       notifyListeners();
     } catch (e) {
       debugPrint('❌ [ProfileProvider] 連勝リセットエラー: $e');

@@ -83,7 +83,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/sounds/
-    - assets/titles.json
+    - assets/upload_files/titles.json
     - assets/upload_files/bad_words_ja.txt
     - assets/upload_files/bad_words_en.txt
 

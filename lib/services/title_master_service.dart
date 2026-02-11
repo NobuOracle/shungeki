@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/title_definition.dart';
+import '../models/player_profile.dart';
 
 /// 称号マスターサービス
-/// assets/titles.json から称号定義を読み込む
+/// assets/upload_files/titles.json から称号定義を読み込む
 class TitleMasterService {
   static final TitleMasterService _instance = TitleMasterService._internal();
   factory TitleMasterService() => _instance;
@@ -17,7 +18,7 @@ class TitleMasterService {
     if (_titles != null) return; // 既に読み込み済み
 
     try {
-      final String jsonString = await rootBundle.loadString('assets/titles.json');
+      final String jsonString = await rootBundle.loadString('assets/upload_files/titles.json');
       final List<dynamic> jsonList = json.decode(jsonString) as List;
       
       _titles = jsonList
@@ -46,13 +47,106 @@ class TitleMasterService {
     }
   }
 
-  /// プレイ回数から獲得可能な称号をチェック
+  /// プロフィールから獲得可能な称号をチェック
+  /// 
+  /// [profile] プレイヤープロフィール
+  /// [lastGameResult] 最後のゲーム結果（オプション）
+  /// 
+  /// 返り値: 新たに獲得した称号のリスト
+  List<TitleDefinition> checkUnlockableTitles({
+    required PlayerProfile profile,
+    Map<String, dynamic>? lastGameResult,
+  }) {
+    final newlyUnlocked = <TitleDefinition>[];
+    
+    for (final title in getAllTitles()) {
+      // 既に獲得済みならスキップ
+      if (profile.unlockedTitleIds.contains(title.id)) continue;
+      
+      // unlock typeに応じて判定
+      if (_checkUnlockCondition(title, profile, lastGameResult)) {
+        newlyUnlocked.add(title);
+      }
+    }
+    
+    return newlyUnlocked;
+  }
+
+  /// unlock条件をチェック
+  bool _checkUnlockCondition(
+    TitleDefinition title,
+    PlayerProfile profile,
+    Map<String, dynamic>? lastGameResult,
+  ) {
+    final unlock = title.unlock;
+    
+    switch (unlock.type) {
+      case 'playCount':
+        // モード別プレイ回数
+        final mode = unlock.mode;
+        final requiredCount = unlock.count ?? 0;
+        final currentCount = profile.playCountByMode[mode] ?? 0;
+        return currentCount >= requiredCount;
+        
+      case 'bestMsAtMost':
+        // ベスト記録が指定時間以下
+        final mode = unlock.mode;
+        final requiredTimeMs = unlock.timeMs ?? 0;
+        final bestRecords = profile.bestRecordsByMode[mode] ?? [];
+        if (bestRecords.isEmpty) return false;
+        final bestTimeMs = bestRecords.first.timeMs;
+        return bestTimeMs <= requiredTimeMs;
+        
+      case 'bestMsExactly':
+        // ベスト記録が指定時間と一致
+        final mode = unlock.mode;
+        final requiredTimeMs = unlock.timeMs ?? 0;
+        final bestRecords = profile.bestRecordsByMode[mode] ?? [];
+        if (bestRecords.isEmpty) return false;
+        final bestTimeMs = bestRecords.first.timeMs;
+        return bestTimeMs == requiredTimeMs;
+        
+      case 'duelPlayCount':
+        // 2人対戦の総プレイ回数
+        final requiredCount = unlock.count ?? 0;
+        final duelCount = profile.duelPlayCount;
+        return duelCount >= requiredCount;
+        
+      case 'duelWinStreak':
+        // 2人対戦の最大連勝数（モード別）
+        final mode = unlock.mode;
+        final requiredCount = unlock.count ?? 0;
+        final maxStreak = profile.maxWinStreakByMode[mode] ?? 0;
+        return maxStreak >= requiredCount;
+        
+      case 'loginStreak':
+        // 連続ログイン日数
+        final requiredCount = unlock.count ?? 0;
+        final currentStreak = profile.loginStreak;
+        return currentStreak >= requiredCount;
+        
+      case 'playedAtTime':
+        // 特定時刻にプレイ完了
+        final requiredTime = unlock.hhmm ?? '';
+        if (lastGameResult == null) return false;
+        final completedAt = lastGameResult['completedAt'] as DateTime?;
+        if (completedAt == null) return false;
+        final timeStr = '${completedAt.hour.toString().padLeft(2, '0')}:${completedAt.minute.toString().padLeft(2, '0')}';
+        return timeStr == requiredTime;
+        
+      default:
+        return false;
+    }
+  }
+
+  /// プレイ回数から獲得可能な称号をチェック（後方互換用）
   /// 
   /// [playCountByMode] 各モードのプレイ回数
   /// [unlockedTitleIds] 既に獲得済みの称号ID
   /// 
   /// 返り値: 新たに獲得した称号のリスト
-  List<TitleDefinition> checkUnlockableTitles({
+  @Deprecated('Use checkUnlockableTitles with PlayerProfile instead')
+  List<TitleDefinition> checkUnlockableTitlesLegacy({
     required Map<String, int> playCountByMode,
     required List<String> unlockedTitleIds,
   }) {
@@ -65,7 +159,7 @@ class TitleMasterService {
       // プレイ回数チェック
       if (title.unlock.type == 'playCount') {
         final mode = title.unlock.mode;
-        final requiredCount = title.unlock.count;
+        final requiredCount = title.unlock.count ?? 0;
         final currentCount = playCountByMode[mode] ?? 0;
         
         if (currentCount >= requiredCount) {
