@@ -310,6 +310,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     required Color color,
   }) {
     final isSelected = _selectedMode == mode;
+    final hasSelection = _selectedMode != null;
     
     return GestureDetector(
       onTap: () {
@@ -318,38 +319,50 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _selectedMode = mode;
         });
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFFE6D4BC), // 古びた紙色
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? Color(0xFF8B6F47) : Color(0xFFB8967D),
-            width: isSelected ? 3 : 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: isSelected ? 8 : 4,
-              offset: Offset(0, isSelected ? 4 : 2),
+      child: ColorFiltered(
+        colorFilter: (!hasSelection || isSelected)
+            ? ColorFilter.mode(
+                Colors.transparent,
+                BlendMode.multiply,
+              )
+            : ColorFilter.matrix([
+                0.5, 0, 0, 0, 0.5 * 255, // 赤チャンネル
+                0, 0.5, 0, 0, 0.5 * 255, // 緑チャンネル
+                0, 0, 0.5, 0, 0.5 * 255, // 青チャンネル
+                0, 0, 0, 0.6, 0,         // アルファチャンネル
+              ]),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFFE6D4BC), // 古びた紙色
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? Color(0xFF8B6F47) : Color(0xFFB8967D),
+              width: isSelected ? 3 : 2,
             ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // 紙の汚れ・シミ
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _PaperStainsPainter(),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: isSelected ? 8 : 4,
+                offset: Offset(0, isSelected ? 4 : 2),
               ),
-            ),
-            
-            // 錆びたピン（4隅）
-            ..._buildRustyPins(),
-            
-            // コンテンツ
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
+            ],
+          ),
+          child: Stack(
+            children: [
+              // 紙の汚れ・シミ
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _PaperStainsPainter(),
+                ),
+              ),
+              
+              // 錆びたピン（4隅）
+              ..._buildRustyPins(),
+              
+              // コンテンツ
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // アイコン画像
@@ -387,6 +400,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       ),
+    ),
     );
   }
 
