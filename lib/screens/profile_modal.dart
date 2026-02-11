@@ -223,14 +223,32 @@ class _ProfileModalState extends State<ProfileModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '二つ名',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF3D2E1F),
-              fontFamily: 'serif',
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '二つ名',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3D2E1F),
+                  fontFamily: 'serif',
+                ),
+              ),
+              if (selectedTitle != null)
+                IconButton(
+                  icon: Icon(Icons.close, size: 20),
+                  color: Color(0xFF8B6F47),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(),
+                  onPressed: () async {
+                    _audioService.playUISelect();
+                    final profileProvider = context.read<ProfileProvider>();
+                    await profileProvider.updateSelectedTitle(null);
+                  },
+                  tooltip: '二つ名を外す',
+                ),
+            ],
           ),
           SizedBox(height: 8),
           Text(
@@ -432,6 +450,15 @@ class TitleListModal extends StatelessWidget {
     final audioService = AudioService();
     final profile = profileProvider.profile!;
     final unlockedIds = profile.unlockedTitleIds;
+
+    // デバッグログ
+    debugPrint('📋 [TitleListModal] 獲得済み称号数: ${unlockedIds.length}');
+    debugPrint('📋 [TitleListModal] 獲得済み称号ID: ${unlockedIds.join(", ")}');
+    debugPrint('📋 [TitleListModal] 称号マスタ数: ${profileProvider.titleMasterList.length}');
+    for (final title in profileProvider.titleMasterList) {
+      final isUnlocked = unlockedIds.contains(title.id);
+      debugPrint('  - ${title.id}: ${title.name} (獲得済み: $isUnlocked)');
+    }
 
     return Dialog(
       backgroundColor: Colors.transparent,

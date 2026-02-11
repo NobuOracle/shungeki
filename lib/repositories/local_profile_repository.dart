@@ -21,11 +21,15 @@ class LocalProfileRepository {
     try {
       final String? jsonString = _prefs.getString(_keyProfile);
       if (jsonString == null || jsonString.isEmpty) {
+        debugPrint('📋 [LocalProfileRepository] プロフィール未保存、デフォルトを返す');
         return PlayerProfile.defaultProfile();
       }
       
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
-      return PlayerProfile.fromJson(json);
+      final profile = PlayerProfile.fromJson(json);
+      debugPrint('✅ [LocalProfileRepository] プロフィール読み込み成功');
+      debugPrint('📋 [LocalProfileRepository] 獲得済み称号: ${profile.unlockedTitleIds.length}件 - ${profile.unlockedTitleIds.join(", ")}');
+      return profile;
     } catch (e) {
       debugPrint('❌ [LocalProfileRepository] プロフィール読み込みエラー: $e');
       return PlayerProfile.defaultProfile();
@@ -38,6 +42,7 @@ class LocalProfileRepository {
       final jsonString = jsonEncode(profile.toJson());
       await _prefs.setString(_keyProfile, jsonString);
       debugPrint('✅ [LocalProfileRepository] プロフィール保存完了');
+      debugPrint('📋 [LocalProfileRepository] 保存した獲得済み称号: ${profile.unlockedTitleIds.length}件 - ${profile.unlockedTitleIds.join(", ")}');
     } catch (e) {
       debugPrint('❌ [LocalProfileRepository] プロフィール保存エラー: $e');
     }

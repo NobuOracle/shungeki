@@ -62,6 +62,7 @@ class ProfileProvider with ChangeNotifier {
       // プロフィール読み込み
       _profile = await _repo.load();
       debugPrint('✅ [ProfileProvider] プロフィール読み込み完了: ${_profile!.playerName}');
+      debugPrint('📋 [ProfileProvider] 獲得済み称号: ${_profile!.unlockedTitleIds.length}件 - ${_profile!.unlockedTitleIds.join(", ")}');
       
       notifyListeners();
     } catch (e) {
@@ -143,7 +144,10 @@ class ProfileProvider with ChangeNotifier {
       final newTitles = await _repo.checkAndUnlockTitles(_profile!);
       
       if (newTitles.isNotEmpty) {
+        // 称号獲得後、プロフィールを再読み込みして更新を反映
+        _profile = await _repo.load();
         debugPrint('🎖️ [ProfileProvider] 称号獲得: ${newTitles.map((t) => t.name).join(", ")}');
+        debugPrint('📋 [ProfileProvider] 現在の獲得済み称号: ${_profile!.unlockedTitleIds.join(", ")}');
       }
       
       notifyListeners();
