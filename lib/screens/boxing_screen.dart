@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
+import '../services/audio_service.dart';
+import '../utils/event_plan_generator.dart';
 import 'result_screen.dart';
 
 // パンチの種類を定義
@@ -46,7 +47,9 @@ String getPunchLabel(PunchType type) {
 }
 
 class BoxingScreen extends StatefulWidget {
-  const BoxingScreen({super.key});
+  final Map<String, dynamic>? eventPlan;
+  
+  const BoxingScreen({super.key, this.eventPlan});
 
   @override
   State<BoxingScreen> createState() => _BoxingScreenState();
@@ -56,19 +59,39 @@ class _BoxingScreenState extends State<BoxingScreen> {
   bool _isWaiting = false;
   bool _hasSignal = false;
   bool _isFalseStart = false;
+  bool _isKnockout = false; // 3回目のShot後の状態
   DateTime? _signalTime;
   Timer? _signalTimer;
-  final Random _random = Random();
+  final AudioService _audioService = AudioService();
   
   // 3回連続早押し用の変数
   int _currentRound = 0; // 0: 未開始, 1: 第1ラウンド, 2: 第2ラウンド, 3: 第3ラウンド
   final List<int> _reactionTimes = []; // 各ラウンドの反応時間を記録
   PunchType? _correctPunch; // 現在の正解パンチ
+  
+  // eventPlanデータ
+  List<Map<String, dynamic>>? _rounds;
 
   @override
   void initState() {
     super.initState();
+    
+    // eventPlanの初期化
+    if (widget.eventPlan != null) {
+      _rounds = List<Map<String, dynamic>>.from(
+        widget.eventPlan!['rounds'] as List
+      );
+    } else {
+      // ローカル生成（1人モード）
+      final seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
+      final localEventPlan = EventPlanGenerator.generateBoxing(seed);
+      _rounds = List<Map<String, dynamic>>.from(
+        localEventPlan['rounds'] as List
+      );
+    }
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _audioService.playBoxingReady(); // Boxing Ready SE
       _startNewRound();
     });
   }
@@ -83,9 +106,14 @@ class _BoxingScreenState extends State<BoxingScreen> {
   void _startNewRound() {
     _currentRound++;
     
-    // ランダムに正解パンチを決定
+    // eventPlanからボタンと遅延を取得
+    final roundData = _rounds![_currentRound - 1];
+    final buttonIndex = roundData['buttonIndex'] as int;
+    final delayMs = roundData['delayMs'] as int;
+    
+    // ボタンインデックスからPunchTypeを決定
     final allPunches = PunchType.values;
-    _correctPunch = allPunches[_random.nextInt(allPunches.length)];
+    _correctPunch = allPunches[buttonIndex];
     
     setState(() {
       _isWaiting = true;
@@ -94,8 +122,7 @@ class _BoxingScreenState extends State<BoxingScreen> {
       _signalTime = null;
     });
 
-    // 2〜5秒後にシグナルを出す
-    final delayMs = 2000 + _random.nextInt(3000);
+    // eventPlanの遅延時間でシグナルを出す
     _signalTimer = Timer(Duration(milliseconds: delayMs), () {
       if (mounted && _isWaiting) {
         setState(() {
@@ -110,6 +137,8 @@ class _BoxingScreenState extends State<BoxingScreen> {
   void _onPunchButtonPress(PunchType punch) {
     if (_isFalseStart) return;
     if (!_isWaiting) return;
+
+    _audioService.playBoxingShot(); // Boxing Shot SE
 
     // 合図前にボタンを押した場合（フライング）
     if (!_hasSignal) {
@@ -134,8 +163,17 @@ class _BoxingScreenState extends State<BoxingScreen> {
       
       // 3回連続の判定
       if (_currentRound >= 3) {
-        // 3回終了 - リザルト表示
-        _showResult(isFalseStart: false);
+        // 3回目のShot SE再生と同時に背景切り替え
+        setState(() {
+          _isKnockout = true;
+        });
+        
+        // 2秒後にリザルト画面へ遷移
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            _showResult(isFalseStart: false);
+          }
+        });
       } else {
         // 次のラウンドへ
         _signalTimer?.cancel();
@@ -169,10 +207,12 @@ class _BoxingScreenState extends State<BoxingScreen> {
       );
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ResultScreen()),
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ResultScreen()),
+      );
+    }
   }
 
   @override
@@ -184,7 +224,11 @@ class _BoxingScreenState extends State<BoxingScreen> {
         decoration: BoxDecoration(
           // ボクシング背景画像を使用
           image: DecorationImage(
-            image: AssetImage('assets/images/boxing_background.png'),
+            image: AssetImage(
+              _isKnockout
+                ? 'assets/images/BoxingModeBackDead.png'
+                : 'assets/images/boxing_background.png'
+            ),
             fit: BoxFit.cover,
           ),
         ),

@@ -3,10 +3,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
+import '../services/audio_service.dart';
+import '../utils/event_plan_generator.dart';
 import 'result_screen.dart';
 
 class WesternScreen extends StatefulWidget {
-  const WesternScreen({super.key});
+  final Map<String, dynamic>? eventPlan;
+  
+  const WesternScreen({super.key, this.eventPlan});
 
   @override
   State<WesternScreen> createState() => _WesternScreenState();
@@ -16,9 +20,10 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
   bool _isWaiting = false;
   bool _hasSignal = false;
   bool _isFalseStart = false;
+  bool _isShot = false; // Shot後の状態
   DateTime? _signalTime;
   Timer? _signalTimer;
-  final Random _random = Random();
+  final AudioService _audioService = AudioService();
   
   // コイン回転アニメーション
   late AnimationController _coinController;
@@ -38,6 +43,7 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
     
     // 画面表示後に自動開始
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _audioService.playWesternReady(); // Western Ready SE
       _startWaiting();
     });
   }
@@ -57,8 +63,18 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
       _signalTime = null;
     });
 
-    // 2-5秒のランダム待機
-    final delayMs = 2000 + _random.nextInt(3000);
+    // eventPlanがあればそれを使用、なければローカル生成
+    int delayMs;
+    if (widget.eventPlan != null) {
+      // eventPlanからdrawAtMsを取得
+      delayMs = widget.eventPlan!['drawAtMs'] as int;
+    } else {
+      // ローカル生成（1人モード）
+      final seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
+      final localEventPlan = EventPlanGenerator.generateWestern(seed);
+      delayMs = localEventPlan['drawAtMs'] as int;
+    }
+    
     _signalTimer = Timer(Duration(milliseconds: delayMs), () {
       if (mounted && _isWaiting) {
         setState(() {
@@ -72,6 +88,8 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
   void _onShoot() {
     if (_isFalseStart) return;
     if (!_isWaiting) return;
+
+    _audioService.playWesternShot(); // Western Shot SE
 
     // 合図前にタップ = お手付き
     if (!_hasSignal) {
@@ -90,7 +108,18 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
     // 合図後にタップ = 成功
     if (_signalTime != null) {
       final reactionTimeMs = DateTime.now().difference(_signalTime!).inMilliseconds;
-      _showResult(isFalseStart: false, reactionTimeMs: reactionTimeMs);
+      
+      // Shot SE再生と同時に背景切り替え
+      setState(() {
+        _isShot = true;
+      });
+      
+      // 2秒後にリザルト画面へ遷移
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          _showResult(isFalseStart: false, reactionTimeMs: reactionTimeMs);
+        }
+      });
     }
   }
 
@@ -102,11 +131,13 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
     } else {
       gameState.setResult(reactionTimeMs: reactionTimeMs, isWin: true);
     }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ResultScreen()),
-    );
+    
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ResultScreen()),
+      );
+    }
   }
 
   @override
@@ -116,14 +147,13 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF8B6F47),
-              Color(0xFF5C4A3A),
-              Color(0xFF3D2E1F),
-            ],
+          image: DecorationImage(
+            image: AssetImage(
+              _isShot 
+                ? 'assets/images/WesternModeBackDead.png'
+                : 'assets/images/WesternModeBack.png'
+            ),
+            fit: BoxFit.cover,
           ),
         ),
         child: Stack(

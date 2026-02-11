@@ -3,10 +3,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
+import '../services/audio_service.dart';
+import '../utils/event_plan_generator.dart';
 import 'result_screen.dart';
 
 class SamuraiScreen extends StatefulWidget {
-  const SamuraiScreen({super.key});
+  final Map<String, dynamic>? eventPlan;
+  
+  const SamuraiScreen({super.key, this.eventPlan});
 
   @override
   State<SamuraiScreen> createState() => _SamuraiScreenState();
@@ -16,19 +20,26 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
   bool _isWaiting = false;
   bool _hasSignal = false;
   bool _isFalseStart = false;
+  bool _isSlashComplete = false; // バー完了後の状態
   DateTime? _signalTime;
   double _sliderValue = 0.0; // 0.0（下）から 1.0（上）
   Timer? _signalTimer;
-  final Random _random = Random();
+  final AudioService _audioService = AudioService();
   
   // セーフゾーン設定
   final double _visibleSafeZone = 0.20; // ユーザーに見せる緑のエリア（20%）
   final double _actualSafeZone = 0.25;  // 実際のセーフエリア（25%、バッファ含む）
+  
+  // フェイント管理
+  List<Map<String, dynamic>> _fakeouts = [];
+  final List<Timer> _fakeoutTimers = [];
+  String? _currentFakeoutText; // 現在表示中のフェイント文言
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _audioService.playSamuraiReady(); // Samurai Ready SE
       _startWaiting();
     });
   }
@@ -36,6 +47,9 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
   @override
   void dispose() {
     _signalTimer?.cancel();
+    for (var timer in _fakeoutTimers) {
+      timer.cancel();
+    }
     super.dispose();
   }
 
@@ -46,14 +60,74 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
       _isFalseStart = false;
       _signalTime = null;
       _sliderValue = 0.0;
+      _currentFakeoutText = null;
     });
 
-    final delayMs = 2000 + _random.nextInt(3000);
-    _signalTimer = Timer(Duration(milliseconds: delayMs), () {
+    // eventPlanからデータ取得
+    int drawAtMs;
+    List<Map<String, dynamic>> fakeouts;
+    
+    if (widget.eventPlan != null) {
+      drawAtMs = widget.eventPlan!['drawAtMs'] as int;
+      fakeouts = List<Map<String, dynamic>>.from(
+        widget.eventPlan!['fakeouts'] as List
+      );
+    } else {
+      // ローカル生成（1人モード）
+      final seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
+      final localEventPlan = EventPlanGenerator.generateSamurai(seed);
+      drawAtMs = localEventPlan['drawAtMs'] as int;
+      fakeouts = List<Map<String, dynamic>>.from(
+        localEventPlan['fakeouts'] as List
+      );
+    }
+    
+    _fakeouts = fakeouts;
+    
+    // デバッグログ: eventPlan内容
+    debugPrint('🎯 [Samurai] eventPlan適用開始');
+    debugPrint('  drawAtMs: $drawAtMs (${drawAtMs / 1000}秒)');
+    debugPrint('  fakeoutCount: ${_fakeouts.length}');
+    for (int i = 0; i < _fakeouts.length; i++) {
+      debugPrint('    fakeout[$i]: atMs=${_fakeouts[i]['atMs']}, text="${_fakeouts[i]['text']}"');
+    }
+    
+    // フェイントタイマーを設定
+    for (var fakeout in _fakeouts) {
+      final atMs = fakeout['atMs'] as int;
+      final text = fakeout['text'] as String;
+      
+      final timer = Timer(Duration(milliseconds: atMs), () {
+        if (mounted && _isWaiting && !_hasSignal) {
+          debugPrint('💥 [Samurai] フェイント表示: "$text" (atMs=$atMs)');
+          setState(() {
+            _currentFakeoutText = text;
+          });
+          
+          // 800ms後に文言を消す
+          Timer(const Duration(milliseconds: 800), () {
+            if (mounted) {
+              debugPrint('🔄 [Samurai] フェイント文言クリア: "$text"');
+              setState(() {
+                _currentFakeoutText = null;
+              });
+            }
+          });
+        }
+      });
+      
+      _fakeoutTimers.add(timer);
+    }
+    
+    // 本番の「今だ！」タイマー
+    debugPrint('⚡ [Samurai] 本番タイマー設定: drawAtMs=$drawAtMs (${drawAtMs / 1000}秒)');
+    _signalTimer = Timer(Duration(milliseconds: drawAtMs), () {
       if (mounted && _isWaiting) {
+        debugPrint('🎊 [Samurai] 本番合図表示: "今だ！"');
         setState(() {
           _hasSignal = true;
           _signalTime = DateTime.now();
+          _currentFakeoutText = null; // フェイントをクリア
         });
       }
     });
@@ -83,8 +157,20 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
 
     // 完了チェック（合図後に98%以上到達）
     if (_hasSignal && _sliderValue >= 0.98 && _signalTime != null) {
+      _audioService.playSamuraiShot(); // Samurai Shot SE (バー完了時)
       final completionTimeMs = DateTime.now().difference(_signalTime!).inMilliseconds;
-      _showResult(isFalseStart: false, reactionTimeMs: completionTimeMs);
+      
+      // バー完了と同時に背景切り替え
+      setState(() {
+        _isSlashComplete = true;
+      });
+      
+      // 2秒後にリザルト画面へ遷移
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          _showResult(isFalseStart: false, reactionTimeMs: completionTimeMs);
+        }
+      });
     }
   }
 
@@ -97,10 +183,12 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
       gameState.setResult(reactionTimeMs: reactionTimeMs, isWin: true);
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ResultScreen()),
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ResultScreen()),
+      );
+    }
   }
 
   @override
@@ -112,7 +200,11 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
         decoration: BoxDecoration(
           // サムライ背景画像を使用
           image: DecorationImage(
-            image: AssetImage('assets/images/samurai_background.png'),
+            image: AssetImage(
+              _isSlashComplete
+                ? 'assets/images/SamuraiModeBackDead.png'
+                : 'assets/images/samurai_background.png'
+            ),
             fit: BoxFit.cover,
           ),
         ),
@@ -158,7 +250,9 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
                         child: Text(
                           _isFalseStart 
                               ? 'FALSE START!' 
-                              : (_hasSignal ? '抜刀!' : 'WAIT'),
+                              : (_hasSignal 
+                                  ? '今だ！' 
+                                  : (_currentFakeoutText ?? 'WAIT')),
                           style: TextStyle(
                             fontSize: 40,
                             fontWeight: FontWeight.bold,

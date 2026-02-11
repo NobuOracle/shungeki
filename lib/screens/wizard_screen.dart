@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
+import '../services/audio_service.dart';
+import '../utils/event_plan_generator.dart';
 import 'result_screen.dart';
 
 class WizardScreen extends StatefulWidget {
-  const WizardScreen({super.key});
+  final Map<String, dynamic>? eventPlan;
+  
+  const WizardScreen({super.key, this.eventPlan});
 
   @override
   State<WizardScreen> createState() => _WizardScreenState();
@@ -17,10 +21,11 @@ class _WizardScreenState extends State<WizardScreen> {
   bool _isWaiting = false;
   bool _hasSignal = false;
   bool _isFalseStart = false;
+  bool _isSpellComplete = false; // 5個目のボタン押下後の状態
   DateTime? _signalTime;
   int _currentStep = 1; // 現在タップすべき数字（1-5）
   Timer? _signalTimer;
-  final Random _random = Random();
+  final AudioService _audioService = AudioService();
   
   // 【重要】五芒星の5つの頂点座標
   List<Offset> _starPositions = [];
@@ -35,6 +40,7 @@ class _WizardScreenState extends State<WizardScreen> {
     _createNumberPositionPairs();
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _audioService.playWizardReady(); // Wizard Ready SE
       _startWaiting();
     });
   }
@@ -49,7 +55,20 @@ class _WizardScreenState extends State<WizardScreen> {
   void _calculateStarPositions() {
     final centerX = 0.5;
     final centerY = 0.45;
-    final radius = 0.28;
+    
+    // eventPlanからradiusScaleを取得（なければデフォルト1.0）
+    double radiusScale = 1.0;
+    if (widget.eventPlan != null) {
+      radiusScale = (widget.eventPlan!['radiusScale'] as num).toDouble();
+    }
+    
+    const baseRadius = 0.28; // 基準半径
+    final radius = baseRadius * radiusScale; // スケールを適用
+    
+    debugPrint('⭐ [Wizard] _calculateStarPositions:');
+    debugPrint('  baseRadius: $baseRadius');
+    debugPrint('  radiusScale: $radiusScale');
+    debugPrint('  applied radius: $radius');
 
     _starPositions = List.generate(5, (i) {
       // 五芒星: 上から開始、72度ずつ回転
@@ -61,22 +80,31 @@ class _WizardScreenState extends State<WizardScreen> {
     });
   }
 
-  // 【重要】数字と座標をペアリングしてシャッフル
+  // 【重要】数字と座標をペアリング
   void _createNumberPositionPairs() {
-    // まず座標リストをシャッフル（これが重要！）
-    final shuffledPositions = List<Offset>.from(_starPositions);
-    shuffledPositions.shuffle(_random);
+    List<int> layout;
     
-    // 数字（1-5）は固定順序で、シャッフルされた座標に配置
+    if (widget.eventPlan != null) {
+      // eventPlanからlayoutを取得
+      layout = List<int>.from(widget.eventPlan!['layout'] as List);
+    } else {
+      // ローカル生成（1人モード）
+      final seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
+      final localEventPlan = EventPlanGenerator.generateWizard(seed);
+      layout = List<int>.from(localEventPlan['layout'] as List);
+    }
+    
+    // layoutに従って数字を配置
+    debugPrint('🔢 [Wizard] layout: $layout');
     _numberPositionPairs = List.generate(5, (i) {
       return {
-        'number': i + 1,
-        'position': shuffledPositions[i],
+        'number': layout[i],
+        'position': _starPositions[i],
       };
     });
     
     if (kDebugMode) {
-      debugPrint('=== Wizard Screen: 数字配置をシャッフルしました ===');
+      debugPrint('=== Wizard Screen: 数字配置 ===');
       for (var pair in _numberPositionPairs) {
         final pos = pair['position'] as Offset;
         debugPrint('  数字${pair['number']}: (${pos.dx.toStringAsFixed(2)}, ${pos.dy.toStringAsFixed(2)})');
@@ -85,9 +113,6 @@ class _WizardScreenState extends State<WizardScreen> {
   }
 
   void _startWaiting() {
-    // 【重要】ゲーム開始時に毎回シャッフル
-    _createNumberPositionPairs();
-    
     setState(() {
       _isWaiting = true;
       _hasSignal = false;
@@ -96,7 +121,19 @@ class _WizardScreenState extends State<WizardScreen> {
       _currentStep = 1;
     });
 
-    final delayMs = 2000 + _random.nextInt(3000);
+    // eventPlanからdrawAtMsを取得
+    int delayMs;
+    if (widget.eventPlan != null) {
+      delayMs = widget.eventPlan!['drawAtMs'] as int;
+    } else {
+      // ローカル生成（1人モード）
+      final seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
+      final localEventPlan = EventPlanGenerator.generateWizard(seed);
+      delayMs = localEventPlan['drawAtMs'] as int;
+    }
+    
+    debugPrint('⚡ [Wizard] タイミング設定: drawAtMs=$delayMs (${delayMs / 1000}秒)');
+    
     _signalTimer = Timer(Duration(milliseconds: delayMs), () {
       if (mounted && _isWaiting) {
         setState(() {
@@ -127,6 +164,11 @@ class _WizardScreenState extends State<WizardScreen> {
 
     // 正しい順序かチェック
     if (number == _currentStep) {
+      // 5回目（最後）の押下時のみSEを再生
+      if (_currentStep == 5) {
+        _audioService.playWizardShot(); // Wizard Shot SE (5回目のみ)
+      }
+      
       setState(() {
         _currentStep++;
       });
@@ -134,7 +176,14 @@ class _WizardScreenState extends State<WizardScreen> {
       // 全て完了
       if (_currentStep > 5 && _signalTime != null) {
         final completionTimeMs = DateTime.now().difference(_signalTime!).inMilliseconds;
-        Future.delayed(const Duration(milliseconds: 300), () {
+        
+        // 5個目のボタン押下と同時に背景切り替え
+        setState(() {
+          _isSpellComplete = true;
+        });
+        
+        // 2秒後にリザルト画面へ遷移
+        Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             _showResult(isFalseStart: false, reactionTimeMs: completionTimeMs);
           }
@@ -152,10 +201,12 @@ class _WizardScreenState extends State<WizardScreen> {
       gameState.setResult(reactionTimeMs: reactionTimeMs, isWin: true);
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ResultScreen()),
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ResultScreen()),
+      );
+    }
   }
 
   @override
@@ -167,7 +218,11 @@ class _WizardScreenState extends State<WizardScreen> {
         decoration: BoxDecoration(
           // ウィザード背景画像を使用
           image: DecorationImage(
-            image: AssetImage('assets/images/wizard_background.png'),
+            image: AssetImage(
+              _isSpellComplete
+                ? 'assets/images/WizardModeBackDead.png'
+                : 'assets/images/wizard_background.png'
+            ),
             fit: BoxFit.cover,
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
 import '../providers/settings_provider.dart';
+import '../services/audio_service.dart';
 
 class ResultScreen extends StatelessWidget {
   const ResultScreen({super.key});
@@ -10,6 +11,7 @@ class ResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameStateProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
+    final audioService = AudioService();
     final bool isWin = gameState.isWin;
     final int? reactionTimeMs = gameState.reactionTimeMs;
     
@@ -105,6 +107,7 @@ class ResultScreen extends StatelessWidget {
                         context,
                         label: 'RETRY',
                         onTap: () {
+                          audioService.playUISelect(); // UISelectSE
                           gameState.resetResult();
                           Navigator.pop(context);
                         },
@@ -114,6 +117,7 @@ class ResultScreen extends StatelessWidget {
                         context,
                         label: 'HOME',
                         onTap: () {
+                          audioService.playUISelect(); // UISelectSE
                           gameState.resetResult();
                           Navigator.popUntil(context, (route) => route.isFirst);
                         },

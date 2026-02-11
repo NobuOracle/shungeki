@@ -3,9 +3,19 @@ import 'package:provider/provider.dart';
 import 'providers/game_state_provider.dart';
 import 'providers/multiplayer_provider.dart';
 import 'providers/settings_provider.dart';
+import 'services/firebase_service.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Firebase初期化と匿名ログイン
+  try {
+    await FirebaseService().initialize();
+  } catch (e) {
+    debugPrint('Firebase初期化エラー: $e');
+  }
+  
   runApp(const MyApp());
 }
 

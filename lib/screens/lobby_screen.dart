@@ -280,15 +280,16 @@ class _LobbyScreenState extends State<LobbyScreen> {
   }
 
   Widget _getGameScreen(GameMode mode) {
+    // ソロモードではeventPlan: nullを渡し、各画面でローカル生成
     switch (mode) {
       case GameMode.western:
-        return const WesternScreen();
+        return const WesternScreen(eventPlan: null);
       case GameMode.boxing:
-        return const BoxingScreen();
+        return const BoxingScreen(eventPlan: null);
       case GameMode.wizard:
-        return const WizardScreen();
+        return const WizardScreen(eventPlan: null);
       case GameMode.samurai:
-        return const SamuraiScreen();
+        return const SamuraiScreen(eventPlan: null);
     }
   }
 }

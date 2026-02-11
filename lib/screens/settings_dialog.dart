@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../services/audio_service.dart';
 
 class SettingsDialog extends StatelessWidget {
   const SettingsDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final audioService = AudioService();
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -54,7 +56,10 @@ class SettingsDialog extends StatelessWidget {
                 IconButton(
                   icon: Icon(Icons.close, size: 28),
                   color: Color(0xFF3D2E1F),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    audioService.playUISelect(); // UISelectSE
+                    Navigator.pop(context);
+                  },
                 ),
               ],
             ),
@@ -94,8 +99,8 @@ class SettingsDialog extends StatelessWidget {
                     
                     const SizedBox(height: 32),
                     
-                    // 結果表記形式切り替え
-                    _buildTimeFormatToggle(context, settings),
+                    // 結果表記形式切り替え（3つの選択肢）
+                    _buildTimeFormatToggle(context, settings, audioService),
                   ],
                 );
               },
@@ -173,7 +178,7 @@ class SettingsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeFormatToggle(BuildContext context, SettingsProvider settings) {
+  Widget _buildTimeFormatToggle(BuildContext context, SettingsProvider settings, AudioService audioService) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -200,6 +205,7 @@ class SettingsDialog extends StatelessWidget {
           
           const SizedBox(height: 16),
           
+          // 1行目: MILLISECONDS と SECONDS
           Row(
             children: [
               Expanded(
@@ -207,8 +213,11 @@ class SettingsDialog extends StatelessWidget {
                   context,
                   label: 'MILLISECONDS',
                   subtitle: 'e.g. 234 ms',
-                  isSelected: !settings.showTimeInSeconds,
-                  onTap: () => settings.setShowTimeInSeconds(false),
+                  isSelected: settings.timeFormat == TimeFormat.milliseconds,
+                  onTap: () {
+                    audioService.playUISelect(); // UISelectSE
+                    settings.setTimeFormat(TimeFormat.milliseconds);
+                  },
                 ),
               ),
               
@@ -219,11 +228,28 @@ class SettingsDialog extends StatelessWidget {
                   context,
                   label: 'SECONDS',
                   subtitle: 'e.g. 0.234 sec',
-                  isSelected: settings.showTimeInSeconds,
-                  onTap: () => settings.setShowTimeInSeconds(true),
+                  isSelected: settings.timeFormat == TimeFormat.seconds,
+                  onTap: () {
+                    audioService.playUISelect(); // UISelectSE
+                    settings.setTimeFormat(TimeFormat.seconds);
+                  },
                 ),
               ),
             ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // 2行目: 秒（日本語）
+          _buildFormatButton(
+            context,
+            label: '秒（日本語）',
+            subtitle: 'e.g. 0.234秒',
+            isSelected: settings.timeFormat == TimeFormat.secondsJapanese,
+            onTap: () {
+              audioService.playUISelect(); // UISelectSE
+              settings.setTimeFormat(TimeFormat.secondsJapanese);
+            },
           ),
         ],
       ),
