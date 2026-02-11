@@ -10,18 +10,27 @@ enum RoomStatus {
 
 /// プレイヤー結果
 class PlayerResult {
-  final int reactionMs;  // 反応時間（ミリ秒）
+  final int reactionMs;  // 反応時間（ミリ秒）または合計時間
   final bool foul;       // お手付きフラグ
+  final int? round1Time; // Boxingモード専用: 1回目のタイム
+  final int? round2Time; // Boxingモード専用: 2回目のタイム
+  final int? round3Time; // Boxingモード専用: 3回目のタイム
 
   PlayerResult({
     required this.reactionMs,
     required this.foul,
+    this.round1Time,
+    this.round2Time,
+    this.round3Time,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'reactionMs': reactionMs,
       'foul': foul,
+      if (round1Time != null) 'round1Time': round1Time,
+      if (round2Time != null) 'round2Time': round2Time,
+      if (round3Time != null) 'round3Time': round3Time,
     };
   }
 
@@ -29,6 +38,9 @@ class PlayerResult {
     return PlayerResult(
       reactionMs: map['reactionMs'] as int? ?? 0,
       foul: map['foul'] as bool? ?? false,
+      round1Time: map['round1Time'] as int?,
+      round2Time: map['round2Time'] as int?,
+      round3Time: map['round3Time'] as int?,
     );
   }
 }

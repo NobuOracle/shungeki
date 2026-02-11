@@ -121,11 +121,6 @@ class _DuelResultScreenState extends State<DuelResultScreen> {
     final hostResult = widget.room.hostResult;
     final guestResult = widget.room.guestResult;
 
-    final hostReaction = hostResult?.reactionMs ?? 0;
-    final guestReaction = guestResult?.reactionMs ?? 0;
-    final hostFoul = hostResult?.foul ?? false;
-    final guestFoul = guestResult?.foul ?? false;
-
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -199,15 +194,13 @@ class _DuelResultScreenState extends State<DuelResultScreen> {
                       const SizedBox(height: 16),
                       _buildResultRow(
                         label: 'ホスト',
-                        reactionMs: hostReaction,
-                        foul: hostFoul,
+                        result: hostResult,
                         isMe: widget.isHost,
                       ),
                       const SizedBox(height: 12),
                       _buildResultRow(
                         label: 'ゲスト',
-                        reactionMs: guestReaction,
-                        foul: guestFoul,
+                        result: guestResult,
                         isMe: !widget.isHost,
                       ),
                     ],
@@ -250,10 +243,29 @@ class _DuelResultScreenState extends State<DuelResultScreen> {
 
   Widget _buildResultRow({
     required String label,
-    required int reactionMs,
-    required bool foul,
+    required PlayerResult? result,
     required bool isMe,
   }) {
+    if (result == null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          '$label: データなし',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      );
+    }
+
+    final reactionMs = result.reactionMs;
+    final foul = result.foul;
+    final hasBoxingDetails = result.round1Time != null &&
+        result.round2Time != null &&
+        result.round3Time != null;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -262,33 +274,77 @@ class _DuelResultScreenState extends State<DuelResultScreen> {
             : Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              '$label${isMe ? " (あなた)" : ""}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontFamily: 'serif',
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '$label${isMe ? " (あなた)" : ""}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  foul ? 'ファウル' : '${reactionMs}ms',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: foul ? Colors.red.shade300 : Colors.white,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+          // Boxing詳細タイム表示
+          if (hasBoxingDetails && !foul) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '1回目: ${result.round1Time}ms',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  Text(
+                    '2回目: ${result.round2Time}ms',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  Text(
+                    '3回目: ${result.round3Time}ms',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  Text(
+                    '合計: ${reactionMs}ms',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              foul ? 'ファウル' : '${reactionMs}ms',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: foul ? Colors.red.shade300 : Colors.white,
-                fontFamily: 'monospace',
-              ),
-              textAlign: TextAlign.right,
-            ),
-          ),
+          ],
         ],
       ),
     );

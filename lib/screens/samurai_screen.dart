@@ -234,10 +234,13 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
                   ),
                 ),
 
-                // メインコンテンツ
-                Center(
+                // メインコンテンツ（上寄りに配置）
+                Positioned(
+                  top: 80,
+                  left: 0,
+                  right: 0,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       // タイトル
                       Container(
@@ -252,7 +255,7 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
                               ? 'FALSE START!' 
                               : (_hasSignal 
                                   ? '今だ！' 
-                                  : (_currentFakeoutText ?? 'WAIT')),
+                                  : (_currentFakeoutText ?? '勝負は一瞬……')),
                           style: TextStyle(
                             fontSize: 40,
                             fontWeight: FontWeight.bold,

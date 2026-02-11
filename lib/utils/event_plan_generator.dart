@@ -82,8 +82,8 @@ class EventPlanGenerator {
       layout[j] = temp;
     }
     
-    // radiusScale: 1.0〜2.0（0.05刻み）
-    final scaleSteps = ((2.0 - 1.0) / 0.05).round() + 1; // 21ステップ
+    // radiusScale: 1.0〜1.7（0.05刻み）
+    final scaleSteps = ((1.7 - 1.0) / 0.05).round() + 1; // 15ステップ
     final randomScaleStep = rng.nextInt(scaleSteps);
     final radiusScale = 1.0 + (randomScaleStep * 0.05);
     

@@ -251,9 +251,12 @@ class _WizardScreenState extends State<WizardScreen> {
                   ),
                 ),
 
-                Center(
+                Positioned(
+                  top: 80,
+                  left: 0,
+                  right: 0,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       // 状態表示
                       Container(
@@ -270,7 +273,7 @@ class _WizardScreenState extends State<WizardScreen> {
                           _isFalseStart 
                               ? 'FALSE START!' 
                               : (_isWaiting 
-                                  ? (_hasSignal ? '1→2→3→4→5の順にタップ!' : '合図を待て...') 
+                                  ? (_hasSignal ? '1→2→3→4→5の順にタップ!' : '集中せよ……') 
                                   : 'WIZARD'),
                           style: TextStyle(
                             fontSize: 20,

@@ -245,14 +245,24 @@ class DuelService {
     required bool isHost,
     required int reactionMs,
     required bool foul,
+    int? round1Time, // Boxingモード専用
+    int? round2Time, // Boxingモード専用
+    int? round3Time, // Boxingモード専用
   }) async {
     final resultKey = isHost ? 'results.host' : 'results.guest';
 
+    final resultData = {
+      'reactionMs': reactionMs,
+      'foul': foul,
+    };
+    
+    // Boxing詳細タイムを追加
+    if (round1Time != null) resultData['round1Time'] = round1Time;
+    if (round2Time != null) resultData['round2Time'] = round2Time;
+    if (round3Time != null) resultData['round3Time'] = round3Time;
+
     await _firestore.collection('rooms').doc(roomId).update({
-      resultKey: {
-        'reactionMs': reactionMs,
-        'foul': foul,
-      },
+      resultKey: resultData,
     });
 
     if (kDebugMode) {
