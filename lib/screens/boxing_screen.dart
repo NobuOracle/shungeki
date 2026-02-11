@@ -380,7 +380,7 @@ class _BoxingScreenState extends State<BoxingScreen> {
     final bool shouldHighlight = _hasSignal && isCorrect && !_isFalseStart;
 
     return GestureDetector(
-      onTap: () => _onPunchButtonPress(punch),
+      onTapDown: (_) => _onPunchButtonPress(punch),
       child: Container(
         height: 60,
         decoration: BoxDecoration(

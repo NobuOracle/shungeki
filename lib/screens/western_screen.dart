@@ -234,7 +234,7 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
                             
                             // メインボタン
                             GestureDetector(
-                              onTap: _onShoot,
+                              onTapDown: (_) => _onShoot(),
                               child: Container(
                                 width: 220,
                                 height: 220,

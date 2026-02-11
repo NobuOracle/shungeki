@@ -338,7 +338,7 @@ class _WizardScreenState extends State<WizardScreen> {
         left: position.dx * 300 - 25,
         top: position.dy * 300 - 25,
         child: GestureDetector(
-          onTap: () => _onNumberPress(number),
+          onTapDown: (_) => _onNumberPress(number),
           child: Container(
             width: 50,
             height: 50,
