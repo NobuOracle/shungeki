@@ -273,28 +273,7 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 30),
-
-                      // 説明テキスト
-                      if (_isWaiting && !_hasSignal && !_isFalseStart)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '合図を待て... (20% SAFE)',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              letterSpacing: 2,
-                              fontFamily: 'serif',
-                            ),
-                          ),
-                        ),
-
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 80),
 
                       // 傾斜スライダー（15度左に傾ける - 左下から右上へ）
                       Transform.rotate(
@@ -407,35 +386,6 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
                         spreadRadius: _hasSignal ? 3 : 0,
                       ),
                     ],
-                  ),
-                ),
-              ),
-              
-              // 進捗パーセント表示
-              Positioned(
-                top: 8,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Text(
-                    '${(_sliderValue * 100).round()}%',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: _sliderValue > 0.5 
-                          ? Color(0xFF3D2E1F) 
-                          : Color(0xFFE6D4BC),
-                      fontFamily: 'serif',
-                      shadows: [
-                        Shadow(
-                          color: _sliderValue > 0.5 
-                              ? Colors.white.withValues(alpha: 0.8) 
-                              : Colors.black.withValues(alpha: 0.8),
-                          offset: Offset(1, 1),
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
