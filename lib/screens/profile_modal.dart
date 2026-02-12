@@ -448,19 +448,32 @@ class TitleListModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final audioService = AudioService();
-    final profile = profileProvider.profile!;
-    final unlockedIds = profile.unlockedTitleIds;
 
-    // デバッグログ
-    debugPrint('📋 [TitleListModal] 獲得済み称号数: ${unlockedIds.length}');
-    debugPrint('📋 [TitleListModal] 獲得済み称号ID: ${unlockedIds.join(", ")}');
-    debugPrint('📋 [TitleListModal] 称号マスタ数: ${profileProvider.titleMasterList.length}');
-    for (final title in profileProvider.titleMasterList) {
-      final isUnlocked = unlockedIds.contains(title.id);
-      debugPrint('  - ${title.id}: ${title.name} (獲得済み: $isUnlocked)');
-    }
+    // Consumerでラップして、ProfileProviderの変更を検知
+    return Consumer<ProfileProvider>(
+      builder: (context, provider, child) {
+        final profile = provider.profile;
+        if (profile == null) {
+          return Dialog(
+            child: Container(
+              padding: EdgeInsets.all(20),
+              child: Text('プロフィール情報がありません'),
+            ),
+          );
+        }
 
-    return Dialog(
+        final unlockedIds = profile.unlockedTitleIds;
+
+        // デバッグログ
+        debugPrint('📋 [TitleListModal] 獲得済み称号数: ${unlockedIds.length}');
+        debugPrint('📋 [TitleListModal] 獲得済み称号ID: ${unlockedIds.join(", ")}');
+        debugPrint('📋 [TitleListModal] 称号マスタ数: ${provider.titleMasterList.length}');
+        for (final title in provider.titleMasterList) {
+          final isUnlocked = unlockedIds.contains(title.id);
+          debugPrint('  - ${title.id}: ${title.name} (獲得済み: $isUnlocked)');
+        }
+
+        return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         constraints: BoxConstraints(maxWidth: 500, maxHeight: 600),
@@ -532,7 +545,7 @@ class TitleListModal extends StatelessWidget {
             Expanded(
               child: ListView(
                 padding: EdgeInsets.all(20),
-                children: profileProvider.titleMasterList.map((title) {
+                children: provider.titleMasterList.map((title) {
                   final isUnlocked = unlockedIds.contains(title.id);
                   final isSelected = profile.selectedTitleId == title.id;
 
@@ -583,12 +596,10 @@ class TitleListModal extends StatelessWidget {
                               audioService.playUISelect();
                               if (isSelected) {
                                 // 選択解除
-                                await profileProvider
-                                    .updateSelectedTitle(null);
+                                await provider.updateSelectedTitle(null);
                               } else {
                                 // 選択
-                                await profileProvider
-                                    .updateSelectedTitle(title.id);
+                                await provider.updateSelectedTitle(title.id);
                               }
                             }
                           : null,
@@ -600,6 +611,8 @@ class TitleListModal extends StatelessWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

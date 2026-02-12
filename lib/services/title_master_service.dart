@@ -84,13 +84,15 @@ class TitleMasterService {
       case 'playCount':
         // モード別プレイ回数
         final mode = unlock.mode;
+        if (mode == null) return false; // モード指定必須
         final requiredCount = unlock.count ?? 0;
         final currentCount = profile.playCountByMode[mode] ?? 0;
         return currentCount >= requiredCount;
         
       case 'bestMsAtMost':
-        // ベスト記録が指定時間以下
+        // ベスト記録が指定時間以下（モード別）
         final mode = unlock.mode;
+        if (mode == null) return false; // モード指定必須
         final requiredTimeMs = unlock.timeMs ?? 0;
         final bestRecords = profile.bestRecordsByMode[mode] ?? [];
         if (bestRecords.isEmpty) return false;
@@ -127,6 +129,7 @@ class TitleMasterService {
       case 'duelWinStreak':
         // 2人対戦の最大連勝数（モード別）
         final mode = unlock.mode;
+        if (mode == null) return false; // モード指定必須
         final requiredCount = unlock.count ?? 0;
         final maxStreak = profile.maxWinStreakByMode[mode] ?? 0;
         return maxStreak >= requiredCount;
