@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/game_state_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/event_plan_generator.dart';
+import '../widgets/layered_mode_background.dart';
 import 'result_screen.dart';
 
 // パンチの種類を定義
@@ -48,7 +49,7 @@ String getPunchLabel(PunchType type) {
 
 class BoxingScreen extends StatefulWidget {
   final Map<String, dynamic>? eventPlan;
-  
+
   const BoxingScreen({super.key, this.eventPlan});
 
   @override
@@ -63,33 +64,33 @@ class _BoxingScreenState extends State<BoxingScreen> {
   DateTime? _signalTime;
   Timer? _signalTimer;
   final AudioService _audioService = AudioService();
-  
+
   // 3回連続早押し用の変数
   int _currentRound = 0; // 0: 未開始, 1: 第1ラウンド, 2: 第2ラウンド, 3: 第3ラウンド
   final List<int> _reactionTimes = []; // 各ラウンドの反応時間を記録
   PunchType? _correctPunch; // 現在の正解パンチ
-  
+
   // eventPlanデータ
   List<Map<String, dynamic>>? _rounds;
 
   @override
   void initState() {
     super.initState();
-    
+
     // eventPlanの初期化
     if (widget.eventPlan != null) {
       _rounds = List<Map<String, dynamic>>.from(
-        widget.eventPlan!['rounds'] as List
+        widget.eventPlan!['rounds'] as List,
       );
     } else {
       // ローカル生成（1人モード）
       final seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
       final localEventPlan = EventPlanGenerator.generateBoxing(seed);
       _rounds = List<Map<String, dynamic>>.from(
-        localEventPlan['rounds'] as List
+        localEventPlan['rounds'] as List,
       );
     }
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _audioService.playBoxingReady(); // Boxing Ready SE
       _startNewRound();
@@ -105,16 +106,16 @@ class _BoxingScreenState extends State<BoxingScreen> {
   // 新しいラウンドを開始
   void _startNewRound() {
     _currentRound++;
-    
+
     // eventPlanからボタンと遅延を取得
     final roundData = _rounds![_currentRound - 1];
     final buttonIndex = roundData['buttonIndex'] as int;
     final delayMs = roundData['delayMs'] as int;
-    
+
     // ボタンインデックスからPunchTypeを決定
     final allPunches = PunchType.values;
     _correctPunch = allPunches[buttonIndex];
-    
+
     setState(() {
       _isWaiting = true;
       _hasSignal = false;
@@ -161,18 +162,20 @@ class _BoxingScreenState extends State<BoxingScreen> {
 
     // 合図後 - 正しいボタンが押されたか確認
     if (punch == _correctPunch && _signalTime != null) {
-      final reactionTimeMs = DateTime.now().difference(_signalTime!).inMilliseconds;
-      
+      final reactionTimeMs = DateTime.now()
+          .difference(_signalTime!)
+          .inMilliseconds;
+
       // 反応時間を記録
       _reactionTimes.add(reactionTimeMs);
-      
+
       // 3回連続の判定
       if (_currentRound >= 3) {
         // 3回目のShot SE再生と同時に背景切り替え
         setState(() {
           _isKnockout = true;
         });
-        
+
         // 2秒後にリザルト画面へ遷移
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
@@ -185,7 +188,7 @@ class _BoxingScreenState extends State<BoxingScreen> {
         setState(() {
           _isWaiting = false;
         });
-        
+
         Future.delayed(const Duration(milliseconds: 800), () {
           if (mounted) {
             _startNewRound();
@@ -198,7 +201,7 @@ class _BoxingScreenState extends State<BoxingScreen> {
 
   void _showResult({required bool isFalseStart}) {
     final gameState = Provider.of<GameStateProvider>(context, listen: false);
-    
+
     if (isFalseStart) {
       gameState.setResult(reactionTimeMs: null, isWin: false);
     } else {
@@ -222,22 +225,21 @@ class _BoxingScreenState extends State<BoxingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ⚠️ 重要: buildメソッドの閉じ括弧 } は編集しないこと！
+
+    // 手前背景（Enemy）の状態判定
+    String frontAsset;
+    if (_isKnockout) {
+      frontAsset = 'assets/upload_files/upload_files/BoxingModeEnemyDead.png';
+    } else {
+      frontAsset = 'assets/upload_files/upload_files/BoxingModeEnemy.png';
+    }
+
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          // ボクシング背景画像を使用
-          image: DecorationImage(
-            image: AssetImage(
-              _isKnockout
-                ? 'assets/images/BoxingModeBackDead.png'
-                : 'assets/images/boxing_background.png'
-            ),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
+      body: LayeredModeBackground(
+        backAsset: 'assets/upload_files/upload_files/BoxingModeBack.png',
+        frontAsset: frontAsset,
+        overlay: Container(
           // 半透明の赤いオーバーレイ
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -250,94 +252,98 @@ class _BoxingScreenState extends State<BoxingScreen> {
               ],
             ),
           ),
-          child: SafeArea(
-            child: Stack(
-              children: [
-                // 閉じるボタン
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: IconButton(
-                    icon: Icon(Icons.close, color: Colors.white, size: 32),
-                    onPressed: () => Navigator.pop(context),
-                  ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 閉じるボタン
+              Positioned(
+                top: 16,
+                right: 16,
+                child: IconButton(
+                  icon: Icon(Icons.close, color: Colors.white, size: 32),
+                  onPressed: () => Navigator.pop(context),
                 ),
+              ),
 
-                // メインコンテンツ
-                Column(
-                  children: [
-                    const SizedBox(height: 80), // 上部マージン
+              // メインコンテンツ
+              Column(
+                children: [
+                  const SizedBox(height: 80), // 上部マージン
+                  // 状態表示（上部に配置）
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _isFalseStart ? Colors.red : Color(0xFFDC143C),
+                        width: 2,
+                      ),
+                    ),
+                    child: Text(
+                      _isFalseStart
+                          ? 'FALSE START!'
+                          : (_hasSignal ? 'HIT NOW!' : 'WAIT...'),
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: _isFalseStart
+                            ? Colors.red.shade300
+                            : Colors.white,
+                        letterSpacing: 3,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            offset: Offset(2, 2),
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
 
-                    // 状態表示（上部に配置）
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                  const SizedBox(height: 20),
+
+                  // 10個のパンチボタン（ジグザグ配置）
+                  Expanded(child: Center(child: _buildPunchButtons())),
+
+                  // ラウンド表示（下部に配置）
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: _isFalseStart ? Colors.red : Color(0xFFDC143C), 
-                          width: 2,
-                        ),
+                        border: Border.all(color: Color(0xFFDC143C), width: 2),
                       ),
                       child: Text(
-                        _isFalseStart 
-                            ? 'FALSE START!' 
-                            : (_hasSignal ? 'HIT NOW!' : 'WAIT...'),
+                        'ROUND $_currentRound / 3',
                         style: TextStyle(
-                          fontSize: 36,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: _isFalseStart ? Colors.red.shade300 : Colors.white,
-                          letterSpacing: 3,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.8),
-                              offset: Offset(2, 2),
-                              blurRadius: 5,
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // 10個のパンチボタン（ジグザグ配置）
-                    Expanded(
-                      child: Center(
-                        child: _buildPunchButtons(),
-                      ),
-                    ),
-
-                    // ラウンド表示（下部に配置）
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Color(0xFFDC143C), width: 2),
-                        ),
-                        child: Text(
-                          'ROUND $_currentRound / 3',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 2,
-                          ),
+                          color: Colors.white,
+                          letterSpacing: 2,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
+    // ⚠️ この下の } がbuildメソッドの終わり。編集不可！
   }
 
   // 10個のパンチボタンを生成（ジグザグ配置）
@@ -361,9 +367,9 @@ class _BoxingScreenState extends State<BoxingScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(width: 24),
-          
+
           // Right側のパンチ（5つ、ジグザグ）
           Expanded(
             child: Column(
@@ -405,8 +411,8 @@ class _BoxingScreenState extends State<BoxingScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: shouldHighlight 
-                    ? Color(0xFFFFD700).withValues(alpha: 0.8) 
+                color: shouldHighlight
+                    ? Color(0xFFFFD700).withValues(alpha: 0.8)
                     : Colors.black.withValues(alpha: 0.5),
                 blurRadius: shouldHighlight ? 20 : 8,
                 offset: Offset(0, 4),
@@ -427,13 +433,15 @@ class _BoxingScreenState extends State<BoxingScreen> {
                 color: shouldHighlight ? Colors.black : Colors.white,
                 letterSpacing: 0,
                 height: 1.2,
-                shadows: shouldHighlight ? [] : [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.8),
-                    offset: Offset(1, 1),
-                    blurRadius: 2,
-                  ),
-                ],
+                shadows: shouldHighlight
+                    ? []
+                    : [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
               ),
               textAlign: TextAlign.center,
             ),
