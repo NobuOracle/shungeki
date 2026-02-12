@@ -213,13 +213,15 @@ class ProfileProvider with ChangeNotifier {
         debugPrint('🏆 [ProfileProvider] 最大連勝記録更新: $mode → $currentStreak連勝');
       }
 
-      // 2人対戦プレイ回数+1
+      // 2人対戦プレイ回数+1、勝利数+1
       final newDuelPlayCount = (_profile!.duelPlayCount) + 1;
+      final newDuelWinCount = (_profile!.duelWinCount) + 1;
 
       _profile = _profile!.copyWith(
         currentWinStreakByMode: newCurrent,
         maxWinStreakByMode: newMax,
         duelPlayCount: newDuelPlayCount,
+        duelWinCount: newDuelWinCount,
       );
 
       await _repo.save(_profile!);
@@ -231,7 +233,7 @@ class ProfileProvider with ChangeNotifier {
         debugPrint('🎖️ [ProfileProvider] 称号獲得: ${newTitles.map((t) => t.name).join(", ")}');
       }
       
-      debugPrint('✅ [ProfileProvider] 連勝更新: $mode → $currentStreak連勝（最大: ${newMax[mode]}）, 2人対戦回数: $newDuelPlayCount');
+      debugPrint('✅ [ProfileProvider] 連勝更新: $mode → $currentStreak連勝（最大: ${newMax[mode]}）, 2人対戦回数: $newDuelPlayCount, 勝利数: $newDuelWinCount');
       notifyListeners();
     } catch (e) {
       debugPrint('❌ [ProfileProvider] 連勝更新エラー: $e');
@@ -251,12 +253,14 @@ class ProfileProvider with ChangeNotifier {
       final previousStreak = newCurrent[mode] ?? 0;
       newCurrent[mode] = 0;
 
-      // 2人対戦プレイ回数+1
+      // 2人対戦プレイ回数+1、敗北数+1
       final newDuelPlayCount = (_profile!.duelPlayCount) + 1;
+      final newDuelLossCount = (_profile!.duelLossCount) + 1;
 
       _profile = _profile!.copyWith(
         currentWinStreakByMode: newCurrent,
         duelPlayCount: newDuelPlayCount,
+        duelLossCount: newDuelLossCount,
       );
 
       await _repo.save(_profile!);
@@ -268,7 +272,7 @@ class ProfileProvider with ChangeNotifier {
         debugPrint('🎖️ [ProfileProvider] 称号獲得: ${newTitles.map((t) => t.name).join(", ")}');
       }
       
-      debugPrint('✅ [ProfileProvider] 連勝リセット: $mode（前回: $previousStreak連勝）, 2人対戦回数: $newDuelPlayCount');
+      debugPrint('✅ [ProfileProvider] 連勝リセット: $mode（前回: $previousStreak連勝）, 2人対戦回数: $newDuelPlayCount, 敗北数: $newDuelLossCount');
       notifyListeners();
     } catch (e) {
       debugPrint('❌ [ProfileProvider] 連勝リセットエラー: $e');

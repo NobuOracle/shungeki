@@ -36,7 +36,10 @@ class PlayerProfile {
   final Map<String, int> maxWinStreakByMode; // 最大連勝数（2人対戦のみ）
   final Map<String, int> currentWinStreakByMode; // 現在の連勝数（2人対戦のみ）
   final int duelPlayCount; // 2人対戦の総プレイ回数
+  final int duelWinCount; // 2人対戦の総勝利数
+  final int duelLossCount; // 2人対戦の総敗北数
   final int loginStreak; // 連続ログイン日数
+  final int mutePlayCount; // 無音プレイ回数（BGM=0かつSE=0）
 
   PlayerProfile({
     required this.playerName,
@@ -47,7 +50,10 @@ class PlayerProfile {
     required this.maxWinStreakByMode,
     required this.currentWinStreakByMode,
     this.duelPlayCount = 0,
+    this.duelWinCount = 0,
+    this.duelLossCount = 0,
     this.loginStreak = 0,
+    this.mutePlayCount = 0,
   });
 
   /// デフォルトプロフィール
@@ -81,7 +87,10 @@ class PlayerProfile {
         'SAMURAI': 0,
       },
       duelPlayCount: 0,
+      duelWinCount: 0,
+      duelLossCount: 0,
       loginStreak: 0,
+      mutePlayCount: 0,
     );
   }
 
@@ -106,7 +115,10 @@ class PlayerProfile {
       maxWinStreakByMode: Map<String, int>.from(json['maxWinStreakByMode'] as Map? ?? {}),
       currentWinStreakByMode: Map<String, int>.from(json['currentWinStreakByMode'] as Map? ?? {}),
       duelPlayCount: json['duelPlayCount'] as int? ?? 0,
+      duelWinCount: json['duelWinCount'] as int? ?? 0,
+      duelLossCount: json['duelLossCount'] as int? ?? 0,
       loginStreak: json['loginStreak'] as int? ?? 0,
+      mutePlayCount: json['mutePlayCount'] as int? ?? 0,
     );
   }
 
@@ -126,7 +138,10 @@ class PlayerProfile {
       'maxWinStreakByMode': maxWinStreakByMode,
       'currentWinStreakByMode': currentWinStreakByMode,
       'duelPlayCount': duelPlayCount,
+      'duelWinCount': duelWinCount,
+      'duelLossCount': duelLossCount,
       'loginStreak': loginStreak,
+      'mutePlayCount': mutePlayCount,
     };
   }
 
@@ -140,7 +155,10 @@ class PlayerProfile {
     Map<String, int>? maxWinStreakByMode,
     Map<String, int>? currentWinStreakByMode,
     int? duelPlayCount,
+    int? duelWinCount,
+    int? duelLossCount,
     int? loginStreak,
+    int? mutePlayCount,
   }) {
     return PlayerProfile(
       playerName: playerName ?? this.playerName,
@@ -151,7 +169,10 @@ class PlayerProfile {
       maxWinStreakByMode: maxWinStreakByMode ?? this.maxWinStreakByMode,
       currentWinStreakByMode: currentWinStreakByMode ?? this.currentWinStreakByMode,
       duelPlayCount: duelPlayCount ?? this.duelPlayCount,
+      duelWinCount: duelWinCount ?? this.duelWinCount,
+      duelLossCount: duelLossCount ?? this.duelLossCount,
       loginStreak: loginStreak ?? this.loginStreak,
+      mutePlayCount: mutePlayCount ?? this.mutePlayCount,
     );
   }
 }

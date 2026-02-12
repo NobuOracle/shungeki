@@ -98,19 +98,31 @@ class TitleMasterService {
         return bestTimeMs <= requiredTimeMs;
         
       case 'bestMsExactly':
-        // ベスト記録が指定時間と一致
-        final mode = unlock.mode;
+        // ベスト記録が指定時間と一致（いずれかのモード）
         final requiredTimeMs = unlock.timeMs ?? 0;
-        final bestRecords = profile.bestRecordsByMode[mode] ?? [];
-        if (bestRecords.isEmpty) return false;
-        final bestTimeMs = bestRecords.first.timeMs;
-        return bestTimeMs == requiredTimeMs;
+        for (final records in profile.bestRecordsByMode.values) {
+          if (records.isEmpty) continue;
+          if (records.first.timeMs == requiredTimeMs) return true;
+        }
+        return false;
         
       case 'duelPlayCount':
         // 2人対戦の総プレイ回数
         final requiredCount = unlock.count ?? 0;
         final duelCount = profile.duelPlayCount;
         return duelCount >= requiredCount;
+        
+      case 'duelWinCount':
+        // 2人対戦の総勝利数
+        final requiredCount = unlock.count ?? 0;
+        final winCount = profile.duelWinCount;
+        return winCount >= requiredCount;
+        
+      case 'duelLossCount':
+        // 2人対戦の総敗北数
+        final requiredCount = unlock.count ?? 0;
+        final lossCount = profile.duelLossCount;
+        return lossCount >= requiredCount;
         
       case 'duelWinStreak':
         // 2人対戦の最大連勝数（モード別）
@@ -133,6 +145,12 @@ class TitleMasterService {
         if (completedAt == null) return false;
         final timeStr = '${completedAt.hour.toString().padLeft(2, '0')}:${completedAt.minute.toString().padLeft(2, '0')}';
         return timeStr == requiredTime;
+        
+      case 'mutePlayCount':
+        // 無音プレイ回数
+        final requiredCount = unlock.count ?? 0;
+        final muteCount = profile.mutePlayCount;
+        return muteCount >= requiredCount;
         
       default:
         return false;
