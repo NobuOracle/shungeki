@@ -155,121 +155,186 @@ class _DuelResultScreenState extends State<DuelResultScreen> {
     final hostResult = widget.room.hostResult;
     final guestResult = widget.room.guestResult;
 
+    // モード別背景画像マッピング
+    final backgroundImageMap = {
+      'WESTERN': 'assets/upload_files/WesternModeBackDead.png',
+      'BOXING': 'assets/upload_files/BoxingModeBackDead.png',
+      'WIZARD': 'assets/upload_files/WizardModeBackDead.png',
+      'SAMURAI': 'assets/upload_files/SamuraiModeBackDead.png',
+    };
+    final backgroundImage = backgroundImageMap[widget.room.mode];
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: _isWinner
-                ? [Color(0xFF2E7D32), Color(0xFF1B5E20), Color(0xFF0D3F0F)]
-                : [Color(0xFFB71C1C), Color(0xFF7F0000), Color(0xFF5F0000)],
-          ),
+          // 背景画像（勝利時のみ表示）
+          image: _isWinner && backgroundImage != null
+              ? DecorationImage(
+                  image: AssetImage(backgroundImage),
+                  fit: BoxFit.cover,
+                )
+              : null,
+          // フォールバックのグラデーション背景（敗北時または画像なし時）
+          gradient: !_isWinner || backgroundImage == null
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: _isWinner
+                      ? [Color(0xFF2E7D32), Color(0xFF1B5E20), Color(0xFF0D3F0F)]
+                      : [Color(0xFFB71C1C), Color(0xFF7F0000), Color(0xFF5F0000)],
+                )
+              : null,
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-
-                // 勝敗アイコン
-                Container(
-                  width: 120,
-                  height: 120,
+        // フェード処理: 上下の境界をぼかす
+        child: Stack(
+          children: [
+            // 上部フェード（SafeArea境界をぼかす）
+            if (_isWinner && backgroundImage != null)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 120,
+                child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isWinner ? Icons.emoji_events : Icons.close,
-                    size: 80,
-                    color: _isWinner ? Color(0xFFFFD700) : Colors.red,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.transparent,
+                      ],
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // 結果メッセージ
-                Text(
-                  _resultMessage,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'serif',
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 48),
-
-                // 結果詳細
-                Container(
-                  padding: const EdgeInsets.all(20),
+              ),
+            // 下部フェード（SafeArea境界をぼかす）
+            if (_isWinner && backgroundImage != null)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 120,
+                child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '結果詳細',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'serif',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildResultRow(
-                        label: 'ホスト',
-                        result: hostResult,
-                        isMe: widget.isHost,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildResultRow(
-                        label: 'ゲスト',
-                        result: guestResult,
-                        isMe: !widget.isHost,
-                      ),
-                    ],
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.transparent,
+                      ],
+                    ),
                   ),
                 ),
+              ),
+            // メインコンテンツ
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 32),
 
-                const SizedBox(height: 48),
-
-                // ホームボタン
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _goHome,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    // 勝敗アイコン
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _isWinner ? Icons.emoji_events : Icons.close,
+                        size: 80,
+                        color: _isWinner ? Color(0xFFFFD700) : Colors.red,
                       ),
                     ),
-                    child: Text(
-                      'HOME',
+
+                    const SizedBox(height: 24),
+
+                    // 結果メッセージ
+                    Text(
+                      _resultMessage,
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: _isWinner ? Color(0xFF2E7D32) : Color(0xFFB71C1C),
-                        letterSpacing: 3,
+                        color: Colors.white,
                         fontFamily: 'serif',
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+
+                    const SizedBox(height: 48),
+
+                    // 結果詳細
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '結果詳細',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontFamily: 'serif',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildResultRow(
+                            label: 'ホスト',
+                            result: hostResult,
+                            isMe: widget.isHost,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildResultRow(
+                            label: 'ゲスト',
+                            result: guestResult,
+                            isMe: !widget.isHost,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    // ホームボタン
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _goHome,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'HOME',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: _isWinner ? Color(0xFF2E7D32) : Color(0xFFB71C1C),
+                            letterSpacing: 3,
+                            fontFamily: 'serif',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

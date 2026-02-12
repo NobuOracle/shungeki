@@ -86,115 +86,167 @@ class _ResultScreenState extends State<ResultScreen> {
     final bool isBoxingMode = gameState.currentMode == GameMode.boxing && 
                               gameState.boxingRound1Time != null;
 
+    // モードに応じた背景画像を取得
+    String? backgroundImage;
+    if (isWin) {
+      switch (gameState.currentMode) {
+        case GameMode.western:
+          backgroundImage = 'assets/upload_files/WesternModeBackDead.png';
+          break;
+        case GameMode.boxing:
+          backgroundImage = 'assets/upload_files/BoxingModeBackDead.png';
+          break;
+        case GameMode.wizard:
+          backgroundImage = 'assets/upload_files/WizardModeBackDead.png';
+          break;
+        case GameMode.samurai:
+          backgroundImage = 'assets/upload_files/SamuraiModeBackDead.png';
+          break;
+      }
+    }
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isWin ? [
-              Color(0xFF2E7D32),
-              Color(0xFF1B5E20),
-              Color(0xFF0D3D10),
-            ] : [
-              Color(0xFF8B0000),
-              Color(0xFF5C0000),
-              Color(0xFF2E0000),
-            ],
-          ),
+          // 背景画像がある場合は画像、ない場合はグラデーション
+          image: backgroundImage != null
+              ? DecorationImage(
+                  image: AssetImage(backgroundImage),
+                  fit: BoxFit.cover,
+                )
+              : null,
+          gradient: backgroundImage == null
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isWin ? [
+                    Color(0xFF2E7D32),
+                    Color(0xFF1B5E20),
+                    Color(0xFF0D3D10),
+                  ] : [
+                    Color(0xFF8B0000),
+                    Color(0xFF5C0000),
+                    Color(0xFF2E0000),
+                  ],
+                )
+              : null,
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 結果アイコン
-                  Icon(
-                    isWin ? Icons.check_circle : Icons.cancel,
-                    size: 120,
-                    color: Colors.white,
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // 結果タイトル
-                  Text(
-                    isWin ? 'SUCCESS!' : 'FALSE START',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 3,
-                      fontFamily: 'serif',
+        child: Stack(
+          children: [
+            // フェード処理用のグラデーションオーバーレイ
+            if (backgroundImage != null)
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.4), // 上部フェード
+                        Colors.transparent,
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.4), // 下部フェード
+                      ],
+                      stops: [0.0, 0.15, 0.85, 1.0],
                     ),
                   ),
-
-                  const SizedBox(height: 30),
-
-                  // ボクシングモードの場合は3回分のタイムを表示
-                  if (isBoxingMode && isWin) ...[
-                    _buildBoxingResults(context, gameState, settings),
-                  ]
-                  // 通常モードの場合は1回分のタイムを表示
-                  else if (isWin && reactionTimeMs != null) ...[
-                    Text(
-                      settings.formatTime(reactionTimeMs),
-                      style: TextStyle(
-                        fontSize: 64,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ],
-
-                  if (!isWin) ...[
-                    const SizedBox(height: 20),
-                    Text(
-                      '合図前に動いてしまいました',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                        letterSpacing: 1,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-
-                  const SizedBox(height: 60),
-
-                  // ボタン
-                  Row(
+                ),
+              ),
+            
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildButton(
-                        context,
-                        label: 'RETRY',
-                        onTap: () {
-                          audioService.playUISelect(); // UISelectSE
-                          gameState.resetResult();
-                          Navigator.pop(context);
-                        },
+                      // 結果アイコン
+                      Icon(
+                        isWin ? Icons.check_circle : Icons.cancel,
+                        size: 120,
+                        color: Colors.white,
+                          ),
+
+                      const SizedBox(height: 40),
+
+                      // 結果タイトル
+                      Text(
+                        isWin ? 'SUCCESS!' : 'FALSE START',
+                        style: TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 3,
+                          fontFamily: 'serif',
+                        ),
                       ),
-                      const SizedBox(width: 20),
-                      _buildButton(
-                        context,
-                        label: 'HOME',
-                        onTap: () {
-                          audioService.playUISelect(); // UISelectSE
-                          gameState.resetResult();
-                          Navigator.popUntil(context, (route) => route.isFirst);
-                        },
+
+                      const SizedBox(height: 30),
+
+                      // ボクシングモードの場合は3回分のタイムを表示
+                      if (isBoxingMode && isWin) ...[
+                        _buildBoxingResults(context, gameState, settings),
+                      ]
+                      // 通常モードの場合は1回分のタイムを表示
+                      else if (isWin && reactionTimeMs != null) ...[
+                        Text(
+                          settings.formatTime(reactionTimeMs),
+                          style: TextStyle(
+                            fontSize: 64,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+
+                      if (!isWin) ...[
+                        const SizedBox(height: 20),
+                        Text(
+                          '合図前に動いてしまいました',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white70,
+                            letterSpacing: 1,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+
+                      const SizedBox(height: 60),
+
+                      // ボタン
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildButton(
+                            context,
+                            label: 'RETRY',
+                            onTap: () {
+                              audioService.playUISelect(); // UISelectSE
+                              gameState.resetResult();
+                              Navigator.pop(context);
+                            },
+                          ),
+                          const SizedBox(width: 20),
+                          _buildButton(
+                            context,
+                            label: 'HOME',
+                            onTap: () {
+                              audioService.playUISelect(); // UISelectSE
+                              gameState.resetResult();
+                              Navigator.popUntil(context, (route) => route.isFirst);
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
