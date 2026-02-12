@@ -20,29 +20,29 @@ enum PunchType {
   rightBodyShot,
 }
 
-// パンチタイプの表示名を取得
+// パンチタイプの表示名を取得（2行表示用）
 String getPunchLabel(PunchType type) {
   switch (type) {
     case PunchType.leftJab:
-      return 'Left Jab';
+      return 'Left\nJab';
     case PunchType.rightJab:
-      return 'Right Jab';
+      return 'Right\nJab';
     case PunchType.leftStraight:
-      return 'Left Straight';
+      return 'Left\nStraight';
     case PunchType.rightStraight:
-      return 'Right Straight';
+      return 'Right\nStraight';
     case PunchType.leftHook:
-      return 'Left Hook';
+      return 'Left\nHook';
     case PunchType.rightHook:
-      return 'Right Hook';
+      return 'Right\nHook';
     case PunchType.leftUppercut:
-      return 'Left Uppercut';
+      return 'Left\nUppercut';
     case PunchType.rightUppercut:
-      return 'Right Uppercut';
+      return 'Right\nUppercut';
     case PunchType.leftBodyShot:
-      return 'Left Body Shot';
+      return 'Left\nBody Shot';
     case PunchType.rightBodyShot:
-      return 'Right Body Shot';
+      return 'Right\nBody Shot';
   }
 }
 
@@ -259,12 +259,55 @@ class _BoxingScreenState extends State<BoxingScreen> {
                 ),
 
                 // メインコンテンツ
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // ラウンド表示
-                      Container(
+                Column(
+                  children: [
+                    const SizedBox(height: 80), // 上部マージン
+
+                    // 状態表示（上部に配置）
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _isFalseStart ? Colors.red : Color(0xFFDC143C), 
+                          width: 2,
+                        ),
+                      ),
+                      child: Text(
+                        _isFalseStart 
+                            ? 'FALSE START!' 
+                            : (_hasSignal ? 'HIT NOW!' : 'WAIT...'),
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: _isFalseStart ? Colors.red.shade300 : Colors.white,
+                          letterSpacing: 3,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.8),
+                              offset: Offset(2, 2),
+                              blurRadius: 5,
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // 10個のパンチボタン（ジグザグ配置）
+                    Expanded(
+                      child: Center(
+                        child: _buildPunchButtons(),
+                      ),
+                    ),
+
+                    // ラウンド表示（下部に配置）
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.7),
@@ -281,47 +324,8 @@ class _BoxingScreenState extends State<BoxingScreen> {
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 20),
-
-                      // 状態表示
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: _isFalseStart ? Colors.red : Color(0xFFDC143C), 
-                            width: 2,
-                          ),
-                        ),
-                        child: Text(
-                          _isFalseStart 
-                              ? 'FALSE START!' 
-                              : (_hasSignal ? 'HIT NOW!' : 'WAIT...'),
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: _isFalseStart ? Colors.red.shade300 : Colors.white,
-                            letterSpacing: 3,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.8),
-                                offset: Offset(2, 2),
-                                blurRadius: 5,
-                              ),
-                            ],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
-                      const SizedBox(height: 40),
-
-                      // 10個のパンチボタン（5行2列）
-                      _buildPunchButtons(),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -331,99 +335,103 @@ class _BoxingScreenState extends State<BoxingScreen> {
     );
   }
 
-  // 10個のパンチボタンを生成
+  // 10個のパンチボタンを生成（ジグザグ配置）
   Widget _buildPunchButtons() {
     return Container(
       constraints: BoxConstraints(maxWidth: 500),
-      child: Column(
-        children: [
-          // Row 1: Left Jab, Right Jab
-          _buildButtonRow(PunchType.leftJab, PunchType.rightJab),
-          const SizedBox(height: 12),
-          
-          // Row 2: Left Straight, Right Straight
-          _buildButtonRow(PunchType.leftStraight, PunchType.rightStraight),
-          const SizedBox(height: 12),
-          
-          // Row 3: Left Hook, Right Hook
-          _buildButtonRow(PunchType.leftHook, PunchType.rightHook),
-          const SizedBox(height: 12),
-          
-          // Row 4: Left Uppercut, Right Uppercut
-          _buildButtonRow(PunchType.leftUppercut, PunchType.rightUppercut),
-          const SizedBox(height: 12),
-          
-          // Row 5: Left Body Shot, Right Body Shot
-          _buildButtonRow(PunchType.leftBodyShot, PunchType.rightBodyShot),
-        ],
-      ),
-    );
-  }
-
-  // 1行分のボタン（左右2つ）
-  Widget _buildButtonRow(PunchType leftPunch, PunchType rightPunch) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(child: _buildPunchButton(leftPunch)),
-          const SizedBox(width: 12),
-          Expanded(child: _buildPunchButton(rightPunch)),
+          // Left側のパンチ（5つ、ジグザグ）
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCircularPunchButton(PunchType.leftJab, offset: 0),
+                _buildCircularPunchButton(PunchType.leftStraight, offset: 20),
+                _buildCircularPunchButton(PunchType.leftHook, offset: 0),
+                _buildCircularPunchButton(PunchType.leftUppercut, offset: 20),
+                _buildCircularPunchButton(PunchType.leftBodyShot, offset: 0),
+              ],
+            ),
+          ),
+          
+          const SizedBox(width: 20),
+          
+          // Right側のパンチ（5つ、ジグザグ）
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCircularPunchButton(PunchType.rightJab, offset: 20),
+                _buildCircularPunchButton(PunchType.rightStraight, offset: 0),
+                _buildCircularPunchButton(PunchType.rightHook, offset: 20),
+                _buildCircularPunchButton(PunchType.rightUppercut, offset: 0),
+                _buildCircularPunchButton(PunchType.rightBodyShot, offset: 20),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // 個別のパンチボタン
-  Widget _buildPunchButton(PunchType punch) {
+  // 円形のパンチボタン（ジグザグ用のオフセット付き）
+  Widget _buildCircularPunchButton(PunchType punch, {double offset = 0}) {
     final bool isCorrect = punch == _correctPunch;
     final bool shouldHighlight = _hasSignal && isCorrect && !_isFalseStart;
 
-    return GestureDetector(
-      onTapDown: (_) => _onPunchButtonPress(punch),
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: shouldHighlight
-                ? [Color(0xFFFFD700), Color(0xFFFFA500)] // ゴールド
-                : [Color(0xFF2C2C2C), Color(0xFF1A1A1A)], // ダークグレー
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: shouldHighlight 
-                  ? Color(0xFFFFD700).withValues(alpha: 0.8) 
-                  : Colors.black.withValues(alpha: 0.5),
-              blurRadius: shouldHighlight ? 20 : 8,
-              offset: Offset(0, 4),
-              spreadRadius: shouldHighlight ? 4 : 0,
+    return Padding(
+      padding: EdgeInsets.only(left: offset, bottom: 8),
+      child: GestureDetector(
+        onTapDown: (_) => _onPunchButtonPress(punch),
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: shouldHighlight
+                  ? [Color(0xFFFFD700), Color(0xFFFFA500)] // ゴールド
+                  : [Color(0xFF2C2C2C), Color(0xFF1A1A1A)], // ダークグレー
             ),
-          ],
-          border: Border.all(
-            color: shouldHighlight ? Color(0xFFFFD700) : Color(0xFF444444),
-            width: shouldHighlight ? 3 : 2,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            getPunchLabel(punch),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: shouldHighlight ? Colors.black : Colors.white,
-              letterSpacing: 0.5,
-              shadows: shouldHighlight ? [] : [
-                Shadow(
-                  color: Colors.black.withValues(alpha: 0.8),
-                  offset: Offset(1, 1),
-                  blurRadius: 2,
-                ),
-              ],
+            boxShadow: [
+              BoxShadow(
+                color: shouldHighlight 
+                    ? Color(0xFFFFD700).withValues(alpha: 0.8) 
+                    : Colors.black.withValues(alpha: 0.5),
+                blurRadius: shouldHighlight ? 20 : 8,
+                offset: Offset(0, 4),
+                spreadRadius: shouldHighlight ? 4 : 0,
+              ),
+            ],
+            border: Border.all(
+              color: shouldHighlight ? Color(0xFFFFD700) : Color(0xFF444444),
+              width: shouldHighlight ? 3 : 2,
             ),
-            textAlign: TextAlign.center,
+          ),
+          child: Center(
+            child: Text(
+              getPunchLabel(punch),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: shouldHighlight ? Colors.black : Colors.white,
+                letterSpacing: 0,
+                height: 1.2,
+                shadows: shouldHighlight ? [] : [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.8),
+                    offset: Offset(1, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       ),
