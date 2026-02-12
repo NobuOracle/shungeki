@@ -25,21 +25,18 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
   Timer? _signalTimer;
   final AudioService _audioService = AudioService();
   
-  // コイン回転アニメーション
-  late AnimationController _coinController;
-  late Animation<double> _coinRotation;
+  // フェイント関連
+  final List<Map<String, dynamic>> _feints = [];
+  final List<Timer> _feintTimers = [];
+  bool _isFeintActive = false;
+  
+  // タンブルウィードアニメーション
+  AnimationController? _tumbleweedController;
+  Animation<double>? _tumbleweedPosition;
 
   @override
   void initState() {
     super.initState();
-    
-    // コイン回転アニメーション初期化
-    _coinController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _coinRotation = Tween<double>(begin: 0, end: 2 * pi).animate(_coinController);
-    _coinController.repeat();
     
     // 画面表示後に自動開始
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -51,7 +48,10 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
   @override
   void dispose() {
     _signalTimer?.cancel();
-    _coinController.dispose();
+    for (final timer in _feintTimers) {
+      timer.cancel();
+    }
+    _tumbleweedController?.dispose();
     super.dispose();
   }
 
@@ -61,18 +61,37 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
       _hasSignal = false;
       _isFalseStart = false;
       _signalTime = null;
+      _feints.clear();
+      _isFeintActive = false;
     });
 
     // eventPlanがあればそれを使用、なければローカル生成
     int delayMs;
+    List<dynamic> feints = [];
+    
     if (widget.eventPlan != null) {
-      // eventPlanからdrawAtMsを取得
+      // eventPlanからdrawAtMsとfeintsを取得
       delayMs = widget.eventPlan!['drawAtMs'] as int;
+      feints = (widget.eventPlan!['feints'] as List?) ?? [];
     } else {
       // ローカル生成（1人モード）
       final seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
       final localEventPlan = EventPlanGenerator.generateWestern(seed);
       delayMs = localEventPlan['drawAtMs'] as int;
+      feints = (localEventPlan['feints'] as List?) ?? [];
+    }
+    
+    // フェイントタイマーをセット
+    for (final feint in feints) {
+      final atMs = feint['atMs'] as int;
+      final durationSec = feint['durationSec'] as double;
+      
+      final timer = Timer(Duration(milliseconds: atMs), () {
+        if (mounted && _isWaiting && !_hasSignal) {
+          _showTumbleweed(durationSec);
+        }
+      });
+      _feintTimers.add(timer);
     }
     
     _signalTimer = Timer(Duration(milliseconds: delayMs), () {
@@ -81,6 +100,37 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
           _hasSignal = true;
           _signalTime = DateTime.now();
         });
+      }
+    });
+  }
+  
+  void _showTumbleweed(double durationSec) {
+    setState(() {
+      _isFeintActive = true;
+    });
+    
+    // タンブルウィードアニメーション
+    _tumbleweedController = AnimationController(
+      duration: Duration(milliseconds: (durationSec * 1000).toInt()),
+      vsync: this,
+    );
+    _tumbleweedPosition = Tween<double>(begin: 1.0, end: -0.2).animate(
+      CurvedAnimation(parent: _tumbleweedController!, curve: Curves.linear)
+    );
+    
+    _tumbleweedController!.forward();
+    
+    // アニメーション終了後にフェイント状態をクリア
+    _tumbleweedController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (mounted) {
+          setState(() {
+            _isFeintActive = false;
+          });
+        }
+        _tumbleweedController?.dispose();
+        _tumbleweedController = null;
+        _tumbleweedPosition = null;
       }
     });
   }
@@ -183,48 +233,38 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
                     ),
                   ),
 
+                  // タンブルウィードアニメーション（最下部・ボタンより後ろ）
+                  if (_isFeintActive && _tumbleweedPosition != null)
+                    Positioned(
+                      bottom: 0,
+                      child: AnimatedBuilder(
+                        animation: _tumbleweedPosition!,
+                        builder: (context, child) {
+                          final screenWidth = MediaQuery.of(context).size.width;
+                          return Transform.translate(
+                            offset: Offset(
+                              screenWidth * _tumbleweedPosition!.value,
+                              0,
+                            ),
+                            child: child,
+                          );
+                        },
+                        child: Transform.rotate(
+                          angle: 0,
+                          child: Image.asset(
+                            'assets/images/upload_files/tumbleweed.png',
+                            width: 80,
+                            height: 80,
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // メインコンテンツ
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // タイトル
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3D2E1F).withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Color(0xFF8B6F47), width: 2),
-                          ),
-                          child: Text(
-                            _isFalseStart ? 'FALSE START!' : (_hasSignal ? 'DRAW!' : 'WAIT'),
-                            style: TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: _isFalseStart ? Colors.red.shade300 : Color(0xFFE6D4BC),
-                              letterSpacing: 4,
-                              fontFamily: 'serif',
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.5),
-                                  offset: Offset(3, 3),
-                                  blurRadius: 5,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 60),
-
-                        // 中央エリア（待機中はコイン、合図後は銃アイコン）
-                        SizedBox(
-                          height: 120,
-                          child: _isWaiting && !_hasSignal
-                              ? _buildRotatingCoin()
-                              : _buildGunIcon(),
-                        ),
-
                         const SizedBox(height: 60),
 
                         // DRAWボタン
@@ -303,65 +343,6 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
           ],
         ),
       ),
-    );
-  }
-
-  // 回転するゴールドコイン（待機中）
-  Widget _buildRotatingCoin() {
-    return AnimatedBuilder(
-      animation: _coinRotation,
-      builder: (context, child) {
-        return Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.001)
-            ..rotateY(_coinRotation.value),
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  Color(0xFFFFD700),
-                  Color(0xFFFFA500),
-                  Color(0xFFDAA520),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.amber.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Center(
-              child: Icon(
-                Icons.star,
-                color: Color(0xFF8B4513),
-                size: 40,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // 銃アイコン（合図後）
-  Widget _buildGunIcon() {
-    return Icon(
-      Icons.gps_fixed,
-      size: 80,
-      color: Color(0xFFE6D4BC),
-      shadows: [
-        Shadow(
-          color: Colors.black.withValues(alpha: 0.5),
-          offset: Offset(3, 3),
-          blurRadius: 5,
-        ),
-      ],
     );
   }
 

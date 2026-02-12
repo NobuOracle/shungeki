@@ -7,6 +7,8 @@ class EventPlanGenerator {
   /// Westernモードのイベントプラン生成
   /// 
   /// drawAtMs: 1.0秒〜15.0秒（0.1秒刻み）
+  /// feintCount: 1〜3回
+  /// feints: タンブルウィードアニメーション情報の配列
   static Map<String, dynamic> generateWestern(int seed) {
     final rng = Random(seed);
     
@@ -16,14 +18,83 @@ class EventPlanGenerator {
     final randomStep = rng.nextInt(steps);
     final drawAtMs = 1000 + (randomStep * 100);
     
+    // feintCount: 1〜3
+    final feintCount = rng.nextInt(3) + 1;
+    
+    final feints = <Map<String, dynamic>>[];
+    
+    if (feintCount > 0) {
+      // フェイント時刻のリストを生成（重複を避ける）
+      final usedTimes = <int>{};
+      const minGapMs = 800; // 最低間隔800ms
+      
+      for (int i = 0; i < feintCount; i++) {
+        // 0〜drawAtMs未満（0.1秒刻み）
+        // ただし、drawAtMsより800ms以上前に配置
+        final maxTime = drawAtMs - minGapMs;
+        if (maxTime <= 0) break; // 時間が足りない場合は終了
+        
+        final timeSteps = maxTime ~/ 100;
+        if (timeSteps <= 0) break;
+        
+        int atMs;
+        int attempts = 0;
+        do {
+          final randomTimeStep = rng.nextInt(timeSteps);
+          atMs = randomTimeStep * 100;
+          attempts++;
+          
+          // 他のフェイントと最低間隔を確保
+          bool tooClose = false;
+          for (final used in usedTimes) {
+            if ((atMs - used).abs() < minGapMs) {
+              tooClose = true;
+              break;
+            }
+          }
+          
+          if (!tooClose) break;
+          
+          // 無限ループ防止
+          if (attempts > 100) {
+            atMs = -1; // スキップ
+            break;
+          }
+        } while (true);
+        
+        if (atMs < 0) continue; // スキップ
+        
+        usedTimes.add(atMs);
+        
+        // アニメーション速度: 0.5〜2.0秒（0.1秒刻み）
+        final speedSteps = ((2.0 - 0.5) / 0.1).round() + 1; // 16ステップ
+        final randomSpeedStep = rng.nextInt(speedSteps);
+        final durationSec = 0.5 + (randomSpeedStep * 0.1);
+        
+        feints.add({
+          'atMs': atMs,
+          'durationSec': durationSec,
+        });
+      }
+      
+      // 時刻順にソート
+      feints.sort((a, b) => (a['atMs'] as int).compareTo(b['atMs'] as int));
+    }
+    
     if (kDebugMode) {
-      debugPrint('🎯 [EventPlanGenerator.generateWestern] seed=$seed, drawAtMs=$drawAtMs (${drawAtMs / 1000}秒)');
+      debugPrint('🎯 [EventPlanGenerator.generateWestern] seed=$seed');
+      debugPrint('  drawAtMs: $drawAtMs (${drawAtMs / 1000}秒)');
+      debugPrint('  feintCount: ${feints.length}');
+      for (int i = 0; i < feints.length; i++) {
+        debugPrint('    feint[$i]: atMs=${feints[i]['atMs']}, durationSec=${feints[i]['durationSec']}');
+      }
     }
     
     return {
       'ver': 1,
       'mode': 'WESTERN',
       'drawAtMs': drawAtMs,
+      'feints': feints,
     };
   }
   

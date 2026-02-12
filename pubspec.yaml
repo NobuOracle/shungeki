@@ -90,6 +90,7 @@ flutter:
     - assets/upload_files/BoxingModeBackDead.png
     - assets/upload_files/WizardModeBackDead.png
     - assets/upload_files/SamuraiModeBackDead.png
+    - assets/images/upload_files/tumbleweed.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

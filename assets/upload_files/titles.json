@@ -39,7 +39,7 @@
   { "id":"T_WIZARD_BEST_1500", "name":"運命改変",         "description":"Wizardで1500ms以下を記録。",              "unlock":{ "type":"bestMsAtMost", "mode":"WIZARD", "timeMs":1500 } },
 
   { "id":"T_SAMURAI_BEST_400", "name":"風鳴",   "description":"Samuraiで400ms以下を記録。",                    "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":400 } },
-    { "id":"T_SAMURAI_BEST_400", "name":"霧断",   "description":"Samuraiで400ms以下を記録。",                    "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI","timeMs":350 } },
+    { "id":"T_SAMURAI_BEST_350", "name":"霧断",   "description":"Samuraiで400ms以下を記録。",                    "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI","timeMs":350 } },
   { "id":"T_SAMURAI_BEST_300", "name":"疾風居合", "description":"Samuraiで300ms以下を記録。",                    "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":300 } },
   { "id":"T_SAMURAI_BEST_250", "name":"月醒",     "description":"Samuraiで250ms以下を記録。",                    "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":250 } },
   { "id":"T_SAMURAI_BEST_200", "name":"雷切",     "description":"Samuraiで200ms以下を記録。",                    "unlock":{ "type":"bestMsAtMost", "mode":"SAMURAI", "timeMs":200 } },
