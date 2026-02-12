@@ -136,6 +136,7 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
   void _onSliderChange(double newValue) {
     if (!_isWaiting) return;
     if (_isFalseStart) return;
+    if (_isSlashComplete) return; // 既に完了済みなら入力を無視
     
     setState(() {
       _sliderValue = newValue.clamp(0.0, 1.0);
@@ -163,6 +164,7 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
       // バー完了と同時に背景切り替え
       setState(() {
         _isSlashComplete = true;
+        _isWaiting = false; // 入力を無効化
       });
       
       // 2秒後にリザルト画面へ遷移

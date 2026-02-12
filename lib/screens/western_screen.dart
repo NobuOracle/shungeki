@@ -88,6 +88,7 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
   void _onShoot() {
     if (_isFalseStart) return;
     if (!_isWaiting) return;
+    if (_isShot) return; // 既にショット済みなら入力を無視
 
     _audioService.playWesternShot(); // Western Shot SE
 
@@ -112,6 +113,7 @@ class _WesternScreenState extends State<WesternScreen> with TickerProviderStateM
       // Shot SE再生と同時に背景切り替え
       setState(() {
         _isShot = true;
+        _isWaiting = false; // 入力を無効化
       });
       
       // 2秒後にリザルト画面へ遷移
