@@ -138,7 +138,12 @@ class _BoxingScreenState extends State<BoxingScreen> {
     if (_isFalseStart) return;
     if (!_isWaiting) return;
 
-    _audioService.playBoxingShot(); // Boxing Shot SE
+    // 3回目のみFinal Shot SEを再生
+    if (_currentRound >= 3 && punch == _correctPunch && _hasSignal) {
+      _audioService.playBoxingFinalShot(); // Boxing Final Shot SE
+    } else {
+      _audioService.playBoxingShot(); // Boxing Shot SE
+    }
 
     // 合図前にボタンを押した場合（フライング）
     if (!_hasSignal) {
@@ -295,7 +300,7 @@ class _BoxingScreenState extends State<BoxingScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 20),
 
                     // 10個のパンチボタン（ジグザグ配置）
                     Expanded(
@@ -349,26 +354,26 @@ class _BoxingScreenState extends State<BoxingScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildCircularPunchButton(PunchType.leftJab, offset: 0),
-                _buildCircularPunchButton(PunchType.leftStraight, offset: 20),
+                _buildCircularPunchButton(PunchType.leftStraight, offset: 40),
                 _buildCircularPunchButton(PunchType.leftHook, offset: 0),
-                _buildCircularPunchButton(PunchType.leftUppercut, offset: 20),
+                _buildCircularPunchButton(PunchType.leftUppercut, offset: 40),
                 _buildCircularPunchButton(PunchType.leftBodyShot, offset: 0),
               ],
             ),
           ),
           
-          const SizedBox(width: 20),
+          const SizedBox(width: 24),
           
           // Right側のパンチ（5つ、ジグザグ）
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildCircularPunchButton(PunchType.rightJab, offset: 20),
+                _buildCircularPunchButton(PunchType.rightJab, offset: 40),
                 _buildCircularPunchButton(PunchType.rightStraight, offset: 0),
-                _buildCircularPunchButton(PunchType.rightHook, offset: 20),
+                _buildCircularPunchButton(PunchType.rightHook, offset: 40),
                 _buildCircularPunchButton(PunchType.rightUppercut, offset: 0),
-                _buildCircularPunchButton(PunchType.rightBodyShot, offset: 20),
+                _buildCircularPunchButton(PunchType.rightBodyShot, offset: 40),
               ],
             ),
           ),
@@ -383,12 +388,12 @@ class _BoxingScreenState extends State<BoxingScreen> {
     final bool shouldHighlight = _hasSignal && isCorrect && !_isFalseStart;
 
     return Padding(
-      padding: EdgeInsets.only(left: offset, bottom: 8),
+      padding: EdgeInsets.only(left: offset, bottom: 10),
       child: GestureDetector(
         onTapDown: (_) => _onPunchButtonPress(punch),
         child: Container(
-          width: 80,
-          height: 80,
+          width: 104,
+          height: 104,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
@@ -417,7 +422,7 @@ class _BoxingScreenState extends State<BoxingScreen> {
             child: Text(
               getPunchLabel(punch),
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: shouldHighlight ? Colors.black : Colors.white,
                 letterSpacing: 0,

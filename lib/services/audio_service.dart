@@ -56,6 +56,9 @@ class AudioService {
   /// Boxing Shot SE（パンチ音）
   Future<void> playBoxingShot() => playSE('BoxingshotSE.mp3');
 
+  /// Boxing Final Shot SE（3回目のパンチ音）
+  Future<void> playBoxingFinalShot() => playSE('BoxingfinalshotSE.mp3');
+
   /// Wizard Ready SE
   Future<void> playWizardReady() => playSE('WizardReadySE.mp3');
 
