@@ -78,6 +78,7 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameStateProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
+    final profileProvider = Provider.of<ProfileProvider>(context);
     final audioService = AudioService();
     final bool isWin = gameState.isWin;
     final int? reactionTimeMs = gameState.reactionTimeMs;
@@ -85,6 +86,37 @@ class _ResultScreenState extends State<ResultScreen> {
     // ボクシングモードかどうかを判定
     final bool isBoxingMode = gameState.currentMode == GameMode.boxing && 
                               gameState.boxingRound1Time != null;
+
+    // 現在のモード名を取得
+    final modeMap = {
+      GameMode.western: 'WESTERN',
+      GameMode.boxing: 'BOXING',
+      GameMode.wizard: 'WIZARD',
+      GameMode.samurai: 'SAMURAI',
+    };
+    final mode = modeMap[gameState.currentMode];
+    
+    // 自己ベスト記録を取得
+    int? bestTimeMs;
+    bool isNewRecord = false;
+    if (mode != null && profileProvider.profile != null) {
+      final bestRecords = profileProvider.profile!.bestRecordsByMode[mode] ?? [];
+      if (bestRecords.isNotEmpty) {
+        bestTimeMs = bestRecords.first.timeMs;
+      }
+      
+      // 新記録判定（勝利時のみ）
+      if (isWin) {
+        final currentTimeMs = isBoxingMode 
+            ? gameState.boxingTotalTime 
+            : reactionTimeMs;
+        if (currentTimeMs != null) {
+          if (bestTimeMs == null || currentTimeMs <= bestTimeMs) {
+            isNewRecord = true;
+          }
+        }
+      }
+    }
 
     // モードに応じた背景画像を取得
     String? backgroundImage;
@@ -186,10 +218,67 @@ class _ResultScreenState extends State<ResultScreen> {
 
                       // ボクシングモードの場合は3回分のタイムを表示
                       if (isBoxingMode && isWin) ...[
+                        // 新記録表示（タイムの上）
+                        if (isNewRecord) ...[
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFFFD700).withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFFFFD700).withValues(alpha: 0.6),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '✨ NEW RECORD ✨',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        
                         _buildBoxingResults(context, gameState, settings),
                       ]
                       // 通常モードの場合は1回分のタイムを表示
                       else if (isWin && reactionTimeMs != null) ...[
+                        // 新記録表示（タイムの上）
+                        if (isNewRecord) ...[
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFFFD700).withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFFFFD700).withValues(alpha: 0.6),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '✨ NEW RECORD ✨',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        
+                        // タイム表示
                         Text(
                           settings.formatTime(reactionTimeMs),
                           style: TextStyle(
@@ -241,6 +330,31 @@ class _ResultScreenState extends State<ResultScreen> {
                           ),
                         ],
                       ),
+                      
+                      // 自己ベスト表示（ボタンの下）
+                      if (bestTimeMs != null) ...[
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            '自己ベスト: ${settings.formatTime(bestTimeMs)}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white70,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
