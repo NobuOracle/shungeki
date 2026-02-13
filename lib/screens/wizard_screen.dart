@@ -217,8 +217,10 @@ class _WizardScreenState extends State<WizardScreen> {
 
     // 手前背景（Enemy）の状態判定
     String frontAsset;
+    double frontBottomOffset = 300.0; // デフォルト位置
     if (_isSpellComplete) {
       frontAsset = 'assets/upload_files/upload_files/WizardModeEnemyDead.png';
+      frontBottomOffset = 180.0; // Dead状態は下に配置
     } else {
       frontAsset = 'assets/upload_files/upload_files/WizardModeEnemy.png';
     }
@@ -227,6 +229,7 @@ class _WizardScreenState extends State<WizardScreen> {
       body: LayeredModeBackground(
         backAsset: 'assets/upload_files/upload_files/WizardModeBack.png',
         frontAsset: frontAsset,
+        frontBottomOffset: frontBottomOffset,
         overlay: Container(
           // 半透明の紫色オーバーレイ（薄く調整）
           decoration: BoxDecoration(

@@ -205,7 +205,7 @@ class _ResultScreenState extends State<ResultScreen> {
         if (isWin) {
           frontAsset =
               'assets/upload_files/upload_files/WizardModeEnemyDead.png';
-          frontBottomOffset = 150.0; // Dead状態はさらに下に配置（浮いて見えないように）
+          frontBottomOffset = 180.0; // Dead状態は適度に下に配置（浮いて見えないように）
         } else {
           frontAsset =
               'assets/upload_files/upload_files/WizardModeEnemyWin.png';
