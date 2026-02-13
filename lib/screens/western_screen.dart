@@ -206,11 +206,15 @@ class _WesternScreenState extends State<WesternScreen>
 
     // 手前背景（Enemy）の状態判定
     String frontAsset;
-    const double frontScale = 0.5; // 全ての人物画像を半分サイズに統一
+    double frontScale;
     if (_isShot) {
+      // 撃たれた状態（Dead）は0.5倍サイズ
       frontAsset = 'assets/upload_files/upload_files/WesternModeEnemyDead.png';
+      frontScale = 0.5;
     } else {
+      // 通常状態（Enemy/Win）はさらに小さく0.25倍サイズ
       frontAsset = 'assets/upload_files/upload_files/WesternModeEnemy.png';
+      frontScale = 0.25;
     }
 
     return Scaffold(
