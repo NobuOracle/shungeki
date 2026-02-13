@@ -112,11 +112,15 @@ class _WesternScreenState extends State<WesternScreen>
     });
 
     // タンブルウィードアニメーション
+    // 画像全体が画面外に出てから消えるように修正
+    // width=480px なので、画面幅に対する比率を考慮
     _tumbleweedController = AnimationController(
       duration: Duration(milliseconds: (durationSec * 1000).toInt()),
       vsync: this,
     );
-    _tumbleweedPosition = Tween<double>(begin: 1.0, end: -0.2).animate(
+    // begin: 1.0 (画面右端) から end: -0.6 (画像全体が左に消える) へ
+    // 480px / 一般的なスマホ幅(800px) ≈ 0.6 なので -0.6 に設定
+    _tumbleweedPosition = Tween<double>(begin: 1.0, end: -0.6).animate(
       CurvedAnimation(parent: _tumbleweedController!, curve: Curves.linear),
     );
 
@@ -202,13 +206,11 @@ class _WesternScreenState extends State<WesternScreen>
 
     // 手前背景（Enemy）の状態判定
     String frontAsset;
-    double frontScale;
+    const double frontScale = 0.5; // 全ての人物画像を半分サイズに統一
     if (_isShot) {
       frontAsset = 'assets/upload_files/upload_files/WesternModeEnemyDead.png';
-      frontScale = 1.0; // EnemyDeadは元サイズ
     } else {
       frontAsset = 'assets/upload_files/upload_files/WesternModeEnemy.png';
-      frontScale = 0.5; // Enemy/EnemyWinは半分
     }
 
     return Scaffold(
