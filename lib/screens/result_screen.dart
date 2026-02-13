@@ -179,6 +179,7 @@ class _ResultScreenState extends State<ResultScreen> {
     String backAsset;
     String frontAsset;
     double frontScale = 0.5; // デフォルトは0.5倍
+    double frontBottomOffset = 300.0; // デフォルトは300px
 
     switch (gameState.currentMode) {
       case GameMode.western:
@@ -201,9 +202,15 @@ class _ResultScreenState extends State<ResultScreen> {
         break;
       case GameMode.wizard:
         backAsset = 'assets/upload_files/upload_files/WizardModeBack.png';
-        frontAsset = isWin
-            ? 'assets/upload_files/upload_files/WizardModeEnemyDead.png'
-            : 'assets/upload_files/upload_files/WizardModeEnemyWin.png';
+        if (isWin) {
+          frontAsset =
+              'assets/upload_files/upload_files/WizardModeEnemyDead.png';
+          frontBottomOffset = 150.0; // Dead状態はさらに下に配置（浮いて見えないように）
+        } else {
+          frontAsset =
+              'assets/upload_files/upload_files/WizardModeEnemyWin.png';
+          // Win状態は通常位置（300px）
+        }
         break;
       case GameMode.samurai:
         backAsset = 'assets/upload_files/upload_files/SaumuraiModeBack.png';
@@ -218,6 +225,7 @@ class _ResultScreenState extends State<ResultScreen> {
         backAsset: backAsset,
         frontAsset: frontAsset,
         frontScale: frontScale, // 動的にスケールを適用
+        frontBottomOffset: frontBottomOffset, // 動的に位置を調整
         overlay: Container(
           // フェード処理用のグラデーションオーバーレイ
           decoration: BoxDecoration(
