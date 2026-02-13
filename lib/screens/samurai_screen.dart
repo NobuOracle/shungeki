@@ -218,15 +218,15 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
         backAsset: 'assets/upload_files/upload_files/SaumuraiModeBack.png',
         frontAsset: frontAsset,
         overlay: Container(
-          // 半透明の赤いオーバーレイ
+          // 半透明の赤いオーバーレイ（薄く調整）
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF8B0000).withValues(alpha: 0.3),
-                Color(0xFF5C0000).withValues(alpha: 0.5),
-                Color(0xFF3D0000).withValues(alpha: 0.6),
+                Color(0xFF8B0000).withValues(alpha: 0.15), // 0.3 → 0.15
+                Color(0xFF5C0000).withValues(alpha: 0.25), // 0.5 → 0.25
+                Color(0xFF3D0000).withValues(alpha: 0.35), // 0.6 → 0.35
               ],
             ),
           ),
