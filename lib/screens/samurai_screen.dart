@@ -287,15 +287,20 @@ class _SamuraiScreenState extends State<SamuraiScreen> {
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 80),
-
-                    // 傾斜スライダー（15度左に傾ける - 左下から右上へ）
-                    Transform.rotate(
-                      angle: 15 * pi / 180, // 左に15度傾ける（時計回り）
-                      child: _buildVerticalSlider(),
-                    ),
                   ],
+                ),
+              ),
+
+              // 傾斜スライダー（画面下部のSafeArea上端ギリギリに配置）
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0, // SafeArea内の最下端
+                child: Center(
+                  child: Transform.rotate(
+                    angle: 15 * pi / 180, // 左に15度傾ける（時計回り）
+                    child: _buildVerticalSlider(),
+                  ),
                 ),
               ),
             ],
