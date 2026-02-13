@@ -22,7 +22,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
     final gameState = Provider.of<GameStateProvider>(context);
     final modeName = _getModeName(gameState.currentMode);
     final modeColor = _getModeColor(gameState.currentMode);
-    
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -31,38 +31,32 @@ class _LobbyScreenState extends State<LobbyScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFD8C9B4),
-              Color(0xFFE6D4BC),
-              Color(0xFFC5AE8E),
-            ],
+            colors: [Color(0xFFD8C9B4), Color(0xFFE6D4BC), Color(0xFFC5AE8E)],
           ),
         ),
         child: Stack(
           children: [
             // ヴィンテージ紙テクスチャ
             Positioned.fill(
-              child: CustomPaint(
-                painter: _VintagePaperPainter(),
-              ),
+              child: CustomPaint(painter: _VintagePaperPainter()),
             ),
-            
+
             SafeArea(
               child: Column(
                 children: [
                   const SizedBox(height: 40),
-                  
+
                   // モード名（大きなカード風）
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 40),
-                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 24,
+                      horizontal: 32,
+                    ),
                     decoration: BoxDecoration(
                       color: Color(0xFFE6D4BC),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: modeColor,
-                        width: 3,
-                      ),
+                      border: Border.all(color: modeColor, width: 3),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.3),
@@ -98,7 +92,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'SOLO DUEL',
+                          'SOLO MODE',
                           style: TextStyle(
                             fontSize: 18,
                             color: Color(0xFF5C4A3A),
@@ -109,9 +103,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const Spacer(),
-                  
+
                   // モードアイコン（中央）
                   Container(
                     width: 150,
@@ -120,10 +114,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Color(0xFFE6D4BC),
-                      border: Border.all(
-                        color: modeColor,
-                        width: 3,
-                      ),
+                      border: Border.all(color: modeColor, width: 3),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.2),
@@ -137,9 +128,42 @@ class _LobbyScreenState extends State<LobbyScreen> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  
+
+                  const SizedBox(height: 24),
+
+                  // ルール説明文（モードアイコンの下）
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 40),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE6D4BC).withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: modeColor.withValues(alpha: 0.3),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      _getModeDescription(gameState.currentMode),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: Color(0xFF3D2E1F),
+                        fontFamily: 'serif',
+                      ),
+                    ),
+                  ),
+
                   const Spacer(),
-                  
+
                   // READY / START MATCHボタン（2段階）
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -153,7 +177,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => _getGameScreen(gameState.currentMode),
+                              builder: (context) =>
+                                  _getGameScreen(gameState.currentMode),
                             ),
                           );
                         }
@@ -180,9 +205,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                           children: [
                             // 木目テクスチャ
                             Positioned.fill(
-                              child: CustomPaint(
-                                painter: _WoodGrainPainter(),
-                              ),
+                              child: CustomPaint(painter: _WoodGrainPainter()),
                             ),
                             Center(
                               child: Text(
@@ -190,12 +213,16 @@ class _LobbyScreenState extends State<LobbyScreen> {
                                 style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
-                                  color: _isReady ? modeColor.withValues(alpha: 0.9) : Color(0xFFE6D4BC),
+                                  color: _isReady
+                                      ? modeColor.withValues(alpha: 0.9)
+                                      : Color(0xFFE6D4BC),
                                   letterSpacing: 4,
                                   fontFamily: 'serif',
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withValues(alpha: 0.5),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
                                       offset: Offset(2, 2),
                                       blurRadius: 3,
                                     ),
@@ -208,16 +235,19 @@ class _LobbyScreenState extends State<LobbyScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // 戻るボタン
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
                     ),
                     child: Text(
                       'BACK TO HOME',
@@ -229,7 +259,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 40),
                 ],
               ),
@@ -292,6 +322,19 @@ class _LobbyScreenState extends State<LobbyScreen> {
         return const SamuraiScreen(eventPlan: null);
     }
   }
+
+  String _getModeDescription(GameMode mode) {
+    switch (mode) {
+      case GameMode.western:
+        return 'あなたは西部のガンマン。今、早撃ち勝負が始まります。\n「Shoot!」が表示されたら、すぐにボタンを押しましょう。';
+      case GameMode.boxing:
+        return 'あなたはラスベガスのボクサー。大一番のゴングが鳴りました。\n10個のボタンのうち、光ったものを素早くタップ！\n3回分の合計タイムを競います。';
+      case GameMode.wizard:
+        return 'あなたは中世の魔術師。ライバルと秘術を賭けて決闘中です。\n魔法陣に数字が現れたら、1から順にタップ。\n最後の数字までのタイムを競います。';
+      case GameMode.samurai:
+        return 'あなたは幕末のサムライ。刺客との立ち合いです。\n「今だ！」が表示されたら、スライダーを上にスワイプして抜刀！\nバーを一番上まで上げるタイムを競います。';
+    }
+  }
 }
 
 // ヴィンテージ紙テクスチャペインター
@@ -300,7 +343,7 @@ class _VintagePaperPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint();
     final random = Random(42);
-    
+
     // 紙の繊維テクスチャ
     for (var i = 0; i < 100; i++) {
       paint.color = Color(0xFFB8967D).withValues(alpha: 0.05);
@@ -308,7 +351,7 @@ class _VintagePaperPainter extends CustomPainter {
       final y = size.height * random.nextDouble();
       canvas.drawCircle(Offset(x, y), 1.5, paint);
     }
-    
+
     // 埃・シミ
     for (var i = 0; i < 30; i++) {
       paint.color = Color(0xFFC5AE8E).withValues(alpha: 0.1);
