@@ -22,6 +22,10 @@ class LayeredModeBackground extends StatelessWidget {
   /// 手前背景の下端オフセット（デフォルト: 300.0 = 画面下端から上へ300px）
   final double frontBottomOffset;
 
+  /// 奥背景の配置位置（デフォルト: Alignment.center）
+  /// 画像のどの部分を基準に配置するかを指定（例: topCenter, bottomCenter）
+  final Alignment backAlignment;
+
   /// オプションのオーバーレイWidget（グラデーションや木目テクスチャなど）
   final Widget? overlay;
 
@@ -34,6 +38,7 @@ class LayeredModeBackground extends StatelessWidget {
     required this.frontAsset,
     this.frontScale = 0.5,
     this.frontBottomOffset = 300.0,
+    this.backAlignment = Alignment.center,
     this.overlay,
     required this.child,
   });
@@ -42,11 +47,12 @@ class LayeredModeBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 奥背景レイヤー: 画面全体をカバー（上下見切れなし）
+        // 奥背景レイヤー: 画面全体をカバー（余白なし、トリミングOK）
         Positioned.fill(
           child: Image.asset(
             backAsset,
-            fit: BoxFit.fill, // 画面全体に伸縮して上下見切れを防ぐ
+            fit: BoxFit.cover, // アスペクト比維持、画面を覆う（トリミングOK）
+            alignment: backAlignment, // 配置位置（デフォルト: center）
           ),
         ),
         // 手前背景レイヤー: 敵キャラクター
