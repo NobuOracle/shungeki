@@ -42,8 +42,13 @@ class LayeredModeBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 奥背景レイヤー: 画面全体をカバー
-        Positioned.fill(child: Image.asset(backAsset, fit: BoxFit.cover)),
+        // 奥背景レイヤー: 画面全体をカバー（上下見切れなし）
+        Positioned.fill(
+          child: Image.asset(
+            backAsset,
+            fit: BoxFit.fill, // 画面全体に伸縮して上下見切れを防ぐ
+          ),
+        ),
         // 手前背景レイヤー: 敵キャラクター
         // - bottom anchor（画像の下端を基準）
         // - 画面下端から上へ frontBottomOffset px の位置
