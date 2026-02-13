@@ -112,6 +112,23 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  /// モード別の失敗メッセージを取得
+  String _getFalseStartMessage(GameMode mode) {
+    switch (mode) {
+      case GameMode.western:
+        return '合図前に動いてしまいました。\nヒュー、不意打ちとは汚ねぇ野郎だ。\nだけど残念だったな、正義は必ず勝つのさ';
+
+      case GameMode.boxing:
+        return '合図前に動いてしまいました。\nん？俺に隙があるように見えたかい？\nそいつは錯覚。カウンターをお見舞いさ';
+
+      case GameMode.wizard:
+        return '合図前に動いてしまいました。\nふふふ。不発に終わってしまいましたなぁ。\n集中力を欠いた魔法など無意味ですぞ。';
+
+      case GameMode.samurai:
+        return '合図前に動いてしまいました。\nふん。隙を見誤るとは他愛ない。\n拙者の返し技の餌食じゃい。';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameStateProvider>(context);
@@ -351,28 +368,67 @@ class _ResultScreenState extends State<ResultScreen> {
                       const SizedBox(height: 16),
                     ],
 
-                    // タイム表示
-                    Text(
-                      settings.formatTime(reactionTimeMs),
-                      style: TextStyle(
-                        fontSize: 64,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFamily: 'monospace',
-                      ),
+                    // タイム表示（縁取り付き白文字 - Boxing以外）
+                    Stack(
+                      children: [
+                        // 縁取り（薄い黒のアウトライン）
+                        Text(
+                          settings.formatTime(reactionTimeMs),
+                          style: TextStyle(
+                            fontSize: 64,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            foreground: Paint()
+                              ..style = PaintingStyle.stroke
+                              ..strokeWidth = 3
+                              ..color = Colors.black.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        // 白文字本体
+                        Text(
+                          settings.formatTime(reactionTimeMs),
+                          style: TextStyle(
+                            fontSize: 64,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
                     ),
                   ],
 
                   if (!isWin) ...[
                     const SizedBox(height: 20),
-                    Text(
-                      '合図前に動いてしまいました',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                        letterSpacing: 1,
-                      ),
-                      textAlign: TextAlign.center,
+                    // 失敗メッセージ（モード別セリフ + 縁取り）
+                    Stack(
+                      children: [
+                        // 縁取り（薄い黒のアウトライン）
+                        Text(
+                          _getFalseStartMessage(gameState.currentMode),
+                          style: TextStyle(
+                            fontSize: 18,
+                            letterSpacing: 1,
+                            height: 1.6,
+                            foreground: Paint()
+                              ..style = PaintingStyle.stroke
+                              ..strokeWidth = 2
+                              ..color = Colors.black.withValues(alpha: 0.5),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        // 白文字本体
+                        Text(
+                          _getFalseStartMessage(gameState.currentMode),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            letterSpacing: 1,
+                            height: 1.6,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ],
 
