@@ -178,13 +178,20 @@ class _ResultScreenState extends State<ResultScreen> {
     // モードに応じた奥背景と手前背景を取得
     String backAsset;
     String frontAsset;
+    double frontScale = 0.5; // デフォルトは0.5倍
 
     switch (gameState.currentMode) {
       case GameMode.western:
         backAsset = 'assets/upload_files/upload_files/WesternModeBack.png';
-        frontAsset = isWin
-            ? 'assets/upload_files/upload_files/WesternModeEnemyDead.png'
-            : 'assets/upload_files/upload_files/WesternModeEnemyWin.png';
+        if (isWin) {
+          frontAsset =
+              'assets/upload_files/upload_files/WesternModeEnemyDead.png';
+          frontScale = 0.5; // Dead状態は0.5倍
+        } else {
+          frontAsset =
+              'assets/upload_files/upload_files/WesternModeEnemyWin.png';
+          frontScale = 0.25; // Win状態（敗北画面）は0.25倍
+        }
         break;
       case GameMode.boxing:
         backAsset = 'assets/upload_files/upload_files/BoxingModeBack.png';
@@ -210,6 +217,7 @@ class _ResultScreenState extends State<ResultScreen> {
       body: LayeredModeBackground(
         backAsset: backAsset,
         frontAsset: frontAsset,
+        frontScale: frontScale, // 動的にスケールを適用
         overlay: Container(
           // フェード処理用のグラデーションオーバーレイ
           decoration: BoxDecoration(
