@@ -76,6 +76,42 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  /// タイムに応じた評価文言を取得
+  String _getPerformanceRating(GameMode mode, int timeMs) {
+    final timeSec = timeMs / 1000.0;
+
+    switch (mode) {
+      case GameMode.western:
+        if (timeSec <= 0.2) return 'Awesome!';
+        if (timeSec <= 0.3) return 'Great!';
+        if (timeSec <= 0.4) return 'Good!';
+        if (timeSec <= 0.5) return 'Slow...';
+        return 'Too Slow...';
+
+      case GameMode.boxing:
+        // Boxingは合計タイムで判定
+        if (timeSec <= 1.5) return 'Awesome!';
+        if (timeSec <= 2.0) return 'Great!';
+        if (timeSec <= 2.5) return 'Good!';
+        if (timeSec <= 3.0) return 'Slow...';
+        return 'Too Slow...';
+
+      case GameMode.wizard:
+        if (timeSec <= 2.0) return 'Awesome!';
+        if (timeSec <= 2.5) return 'Great!';
+        if (timeSec <= 3.0) return 'Good!';
+        if (timeSec <= 3.5) return 'Slow...';
+        return 'Too Slow...';
+
+      case GameMode.samurai:
+        if (timeSec <= 0.2) return 'Awesome!';
+        if (timeSec <= 0.3) return 'Great!';
+        if (timeSec <= 0.4) return 'Good!';
+        if (timeSec <= 0.5) return 'Slow...';
+        return 'Too Slow...';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameStateProvider>(context);
@@ -188,16 +224,61 @@ class _ResultScreenState extends State<ResultScreen> {
 
                   const SizedBox(height: 40),
 
-                  // 結果タイトル
-                  Text(
-                    isWin ? 'SUCCESS!' : 'FALSE START',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 3,
-                      fontFamily: 'serif',
-                    ),
+                  // 結果タイトル（成績に応じた評価文言 + 縁取り）
+                  Builder(
+                    builder: (context) {
+                      // 評価判定用のタイムを取得
+                      int? evaluationTimeMs;
+                      if (isWin) {
+                        if (isBoxingMode && gameState.boxingTotalTime != null) {
+                          evaluationTimeMs = gameState.boxingTotalTime;
+                        } else if (reactionTimeMs != null) {
+                          evaluationTimeMs = reactionTimeMs;
+                        }
+                      }
+
+                      // 評価文言を取得
+                      final String resultText;
+                      if (isWin && evaluationTimeMs != null) {
+                        resultText = _getPerformanceRating(
+                          gameState.currentMode,
+                          evaluationTimeMs,
+                        );
+                      } else {
+                        resultText = 'FALSE START';
+                      }
+
+                      // 縁取り付きテキスト
+                      return Stack(
+                        children: [
+                          // 縁取り（薄い黒のアウトライン）
+                          Text(
+                            resultText,
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 3,
+                              fontFamily: 'serif',
+                              foreground: Paint()
+                                ..style = PaintingStyle.stroke
+                                ..strokeWidth = 3
+                                ..color = Colors.black.withValues(alpha: 0.6),
+                            ),
+                          ),
+                          // 白文字本体
+                          Text(
+                            resultText,
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 3,
+                              fontFamily: 'serif',
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 30),
