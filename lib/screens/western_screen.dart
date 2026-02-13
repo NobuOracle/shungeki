@@ -202,16 +202,20 @@ class _WesternScreenState extends State<WesternScreen>
 
     // 手前背景（Enemy）の状態判定
     String frontAsset;
+    double frontScale;
     if (_isShot) {
       frontAsset = 'assets/upload_files/upload_files/WesternModeEnemyDead.png';
+      frontScale = 1.0; // EnemyDeadは元サイズ
     } else {
       frontAsset = 'assets/upload_files/upload_files/WesternModeEnemy.png';
+      frontScale = 0.5; // Enemy/EnemyWinは半分
     }
 
     return Scaffold(
       body: LayeredModeBackground(
         backAsset: 'assets/upload_files/upload_files/WesternModeBack.png',
         frontAsset: frontAsset,
+        frontScale: frontScale,
         overlay: Stack(
           children: [
             // 木目テクスチャオーバーレイ
@@ -254,8 +258,9 @@ class _WesternScreenState extends State<WesternScreen>
                       angle: 0,
                       child: Image.asset(
                         'assets/images/upload_files/tumbleweed.png',
-                        width: 80,
-                        height: 80,
+                        width: 480,
+                        height: 480,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
@@ -264,10 +269,8 @@ class _WesternScreenState extends State<WesternScreen>
               // メインコンテンツ
               Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const SizedBox(height: 60),
-
                     // DRAWボタン
                     Stack(
                       alignment: Alignment.center,
@@ -343,6 +346,8 @@ class _WesternScreenState extends State<WesternScreen>
                         ),
                       ],
                     ),
+                    // 下部SafeAreaマージン
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
